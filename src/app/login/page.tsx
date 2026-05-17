@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, ShieldCheck, UserCog, Users, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/ui/logo";
 import { Input } from "@/components/ui/input";
 import {
   Card,
@@ -137,15 +138,18 @@ export default function LoginPage() {
         className="w-full max-w-md"
       >
         <Card className="border-slate-200/60 shadow-xl bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800">
-          <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="text-3xl font-bold tracking-tight text-center">
-              Welcome
-            </CardTitle>
-            <CardDescription className="text-base text-center">
-              {step === "email" 
-                ? "Enter your email to receive a login code." 
-                : "Enter the 6-digit code sent to your email."}
-            </CardDescription>
+          <CardHeader className="space-y-4 pb-6 flex flex-col items-center text-center">
+            <Logo className="mb-2" />
+            <div className="space-y-1">
+              <CardTitle className="text-3xl font-bold tracking-tight">
+                Welcome
+              </CardTitle>
+              <CardDescription className="text-base">
+                {step === "email" 
+                  ? "Enter your email to receive a login code." 
+                  : "Enter the 6-digit code sent to your email."}
+              </CardDescription>
+            </div>
           </CardHeader>
           
           <CardContent>

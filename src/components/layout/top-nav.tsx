@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 
+import { Logo } from "@/components/ui/logo";
+
 type TopNavProps = {
   title: string;
   roleLabel: string;
@@ -33,16 +35,19 @@ export default function TopNav({
     <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 px-4 py-4 backdrop-blur-md sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="shrink-0 lg:hidden"
-            onClick={onToggleSidebar}
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          <div className="min-w-0">
+          <div className="flex items-center gap-2 lg:hidden">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0"
+              onClick={onToggleSidebar}
+              aria-label="Toggle sidebar"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <Logo showText={false} />
+          </div>
+          <div className="min-w-0 hidden lg:block">
             <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
               {title}
             </p>

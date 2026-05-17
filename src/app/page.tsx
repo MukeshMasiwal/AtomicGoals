@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import DashboardCharts from "@/components/charts/HomeDashboardChartsWrapper";
+import { Logo } from "@/components/ui/logo";
 
 const features = [
   {
@@ -78,8 +79,7 @@ export default function Home() {
       <header className="navbar" id="home">
         <div className="container nav-inner">
           <div className="brand">
-            <span className="logo-badge">AG</span>
-            <span className="brand-name">AtomicGoals</span>
+            <Logo />
           </div>
           <nav className="nav-links">
             <a href="#home">Home</a>

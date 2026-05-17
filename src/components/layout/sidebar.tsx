@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 
+import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 import type { Role } from "@/types";
 
@@ -107,16 +108,8 @@ export default function Sidebar({
         collapsed && "w-[88px] px-3"
       )}
     >
-      <div className="flex items-center gap-3 px-2">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-blue-600 text-sm font-bold text-white shadow-lg shadow-primary/25">
-          GT
-        </span>
-        {!collapsed ? (
-          <div>
-            <p className="text-sm font-semibold text-slate-900">GoalTrack</p>
-            <p className="text-xs text-slate-500">Performance Portal</p>
-          </div>
-        ) : null}
+      <div className="flex items-center px-2 py-2">
+        <Logo showText={!collapsed} />
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
