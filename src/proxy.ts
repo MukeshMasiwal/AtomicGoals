@@ -47,16 +47,9 @@ export async function proxy(request: NextRequest) {
 
   const isPublic = isPublicPath(pathname);
 
-  // If user is authenticated and trying to access login/signup, redirect to their role dashboard
-  if (isAuthenticated && (pathname === "/login" || pathname === "/signup")) {
-    const role = session?.role;
-    let redirectPath = "/dashboard";
-    
-    if (role === "admin") redirectPath = "/admin";
-    else if (role === "manager") redirectPath = "/manager";
-    else if (role === "employee") redirectPath = "/employee";
-
-    return NextResponse.redirect(new URL(redirectPath, request.url));
+  // If user is authenticated and trying to access login/signup, redirect to dashboard
+  if (isAuthenticated && (pathname === "/login" || pathname === "/signup" || pathname === "/")) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Allow access to public paths if not authenticated

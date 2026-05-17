@@ -44,19 +44,9 @@ export default function LoginPage() {
   };
 
   const redirectBasedOnRole = (role?: string) => {
-    switch (role) {
-      case "admin":
-        router.push("/admin");
-        break;
-      case "manager":
-        router.push("/manager");
-        break;
-      case "employee":
-        router.push("/employee");
-        break;
-      default:
-        router.push("/dashboard");
-    }
+    // We are routing all authenticated users to the shared dashboard shell.
+    // The sidebar and proxy middleware handle actual route protection.
+    router.push("/dashboard");
   };
 
   async function handleSendOtp(event: React.FormEvent<HTMLFormElement>) {
@@ -129,7 +119,8 @@ export default function LoginPage() {
 
   // Development-only helper function for quick seed login
   async function handleSeedLogin(seedEmail: string) {
-    if (process.env.NODE_ENV !== "development") return;
+    // Temporarily removing strict env check to debug visibility
+    // if (process.env.NODE_ENV === "production") return;
     
     setStatus("loading");
     setMessage("");
@@ -321,8 +312,8 @@ export default function LoginPage() {
           </CardFooter>
         </Card>
 
-        {/* Development-only seed login section */}
-        {process.env.NODE_ENV === "development" && (
+        {/* Development-only seed login section (Temporarily visible in all envs for debugging) */}
+        {(
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -335,13 +326,14 @@ export default function LoginPage() {
                 Development Only
               </div>
               <h3 className="text-sm font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">DEMO CREDENTIALS</h3>
+              <p className="text-xs text-slate-400 mt-2">Current Environment: {process.env.NODE_ENV}</p>
             </div>
 
             <div className="flex flex-col gap-3">
               {[
-                { role: "Admin", email: "admin@ihgst.com", icon: ShieldCheck },
-                { role: "Manager", email: "manager@ihgst.com", icon: UserCog },
-                { role: "Employee1", email: "employee1@ihgst.com", icon: User }
+                { role: "Admin", email: "admin@atomicgoals.com", icon: ShieldCheck },
+                { role: "Manager", email: "manager@atomicgoals.com", icon: UserCog },
+                { role: "Employee1", email: "employee1@atomicgoals.com", icon: User }
               ].map((cred) => (
                 <button
                   key={cred.email}

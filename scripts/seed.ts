@@ -7,21 +7,21 @@ import { User } from "../src/models/User";
 const seedUsers = [
   {
     name: "Admin User",
-    email: "admin@test.com",
+    email: "admin@atomicgoals.com",
     role: "admin",
     verified: true,
     isSeedUser: true,
   },
   {
     name: "Manager User",
-    email: "manager@test.com",
+    email: "manager@atomicgoals.com",
     role: "manager",
     verified: true,
     isSeedUser: true,
   },
   {
     name: "Employee User",
-    email: "employee@test.com",
+    email: "employee1@atomicgoals.com",
     role: "employee",
     verified: true,
     isSeedUser: true,
