@@ -29,7 +29,7 @@ export async function POST(request: Request) {
         role: "employee", // Default role
         department: "General",
         otp,
-        otpExpire,
+        otpExpiry: otpExpire,
       });
       await logAudit({
         action: "user.signup",
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     } else {
       // Update existing user with new OTP
       user.otp = otp;
-      user.otpExpire = otpExpire;
+      user.otpExpiry = otpExpire;
       await user.save();
     }
 

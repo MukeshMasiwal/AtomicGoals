@@ -22,14 +22,14 @@ export async function POST(request: Request) {
     }
 
     await connectDB();
-    const user = await User.findOne({ email }).select("+otp +otpExpire").lean<{
+    const user = await User.findOne({ email }).select("+otp +otpExpiry").lean<{
       _id: { toString(): string };
       email: string;
       name: string;
       role?: Role;
       department?: string;
       otp?: string;
-      otpExpire?: Date;
+      otpExpiry?: Date;
     }>();
 
     if (!user) {
@@ -40,14 +40,14 @@ export async function POST(request: Request) {
       return Response.json({ error: "Invalid OTP." }, { status: 401 });
     }
 
-    if (!user.otpExpire || new Date() > new Date(user.otpExpire)) {
+    if (!user.otpExpiry || new Date() > new Date(user.otpExpiry)) {
       return Response.json({ error: "OTP has expired." }, { status: 401 });
     }
 
     // Clear OTP after successful verification
     await User.updateOne(
       { _id: user._id },
-      { $unset: { otp: 1, otpExpire: 1 } }
+      { $unset: { otp: 1, otpExpiry: 1 } }
     );
 
     const sessionUser = {
