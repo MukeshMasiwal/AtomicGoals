@@ -184,7 +184,7 @@ export default async function GoalsPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={`font-medium border ${getPriorityBadge(goal.priority)}`}>
+                          <Badge variant={null} className={`font-medium border ${getPriorityBadge(goal.priority)}`}>
                             {goal.priority}
                           </Badge>
                         </TableCell>
