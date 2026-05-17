@@ -1,96 +1,75 @@
-import { logAudit } from "@/lib/audit";
+import { NextResponse } from "next/server";
 import { getSessionFromCookies } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
-import { canAccessGoal } from "@/lib/permissions";
 import { Goal } from "@/models/Goal";
 
-type RouteContext = { params: Promise<{ id: string }> };
-
-type GoalRecord = {
-  _id: unknown;
-  ownerId: unknown;
-  ownerEmail: string;
-  department?: string;
-  managerEmail?: string;
-};
-
-function sanitizeGoal(goal: Record<string, unknown>) {
-  return {
-    ...goal,
-    id: String(goal._id ?? ""),
-    ownerId: goal.ownerId ? String(goal.ownerId) : undefined,
-  };
-}
-
-export async function GET(_request: Request, context: RouteContext) {
-  const user = await getSessionFromCookies();
-  if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id } = await context.params;
-
+export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
+    const params = await context.params;
+    const session = await getSessionFromCookies();
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const updates = await req.json();
+
     await connectDB();
-    const goal = await Goal.findById(id).lean<GoalRecord>();
-    if (!goal) {
-      return Response.json({ error: "Goal not found." }, { status: 404 });
+    
+    const goal = await Goal.findById(params.id);
+    if (!goal) return NextResponse.json({ error: "Goal not found" }, { status: 404 });
+
+    if (updates.dueDate) {
+      const parsedDueDate = new Date(updates.dueDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (parsedDueDate < today) {
+        return NextResponse.json({ error: "Deadline cannot be set in the past." }, { status: 400 });
+      }
+      updates.dueDate = parsedDueDate;
     }
 
-    if (
-      !canAccessGoal(user, {
-        ownerId: String(goal.ownerId),
-        ownerEmail: goal.ownerEmail,
-        department: goal.department,
-        managerEmail: goal.managerEmail,
-      })
-    ) {
-      return Response.json({ error: "Forbidden" }, { status: 403 });
+    // Allow creator or admin/manager to edit
+    if (goal.creator.toString() !== session.id && session.role === "employee") {
+      // Check if assigned
+      if (!goal.assignedTo.map(String).includes(session.id)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
     }
 
-    return Response.json({
-      goal: sanitizeGoal(goal as unknown as Record<string, unknown>),
-    });
+    // Employees cannot change approval status
+    if (session.role === "employee") {
+      delete updates.approvalStatus;
+      delete updates.approvedBy;
+      delete updates.approvalComments;
+    }
+
+    Object.assign(goal, updates);
+    await goal.save();
+
+    return NextResponse.json({ success: true, goal });
   } catch (error) {
-    console.error("[goals/[id]/GET]", error);
-    return Response.json({ error: "Failed to fetch goal." }, { status: 500 });
+    console.error("Update goal error:", error);
+    return NextResponse.json({ error: "Failed to update goal" }, { status: 500 });
   }
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
-  const user = await getSessionFromCookies();
-  if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id } = await context.params;
-
+export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
+    const params = await context.params;
+    const session = await getSessionFromCookies();
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     await connectDB();
-    const goal = await Goal.findById(id).lean<GoalRecord>();
-    if (!goal) {
-      return Response.json({ error: "Goal not found." }, { status: 404 });
+    const goal = await Goal.findById(params.id);
+    
+    if (!goal) return NextResponse.json({ error: "Goal not found" }, { status: 404 });
+
+    if (goal.creator.toString() !== session.id && session.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const isOwner =
-      String(goal.ownerId) === user.id || goal.ownerEmail === user.email;
-
-    if (user.role !== "admin" && !isOwner) {
-      return Response.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    await Goal.findByIdAndDelete(id);
-
-    await logAudit({
-      action: "goal.delete",
-      actorEmail: user.email,
-      targetType: "goal",
-      targetId: id,
-    });
-
-    return Response.json({ ok: true });
+    await goal.deleteOne();
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[goals/[id]/DELETE]", error);
-    return Response.json({ error: "Failed to delete goal." }, { status: 500 });
+    console.error("Delete goal error:", error);
+    return NextResponse.json({ error: "Failed to delete goal" }, { status: 500 });
   }
 }

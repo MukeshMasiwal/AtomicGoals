@@ -9,9 +9,7 @@ export async function GET() {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!canManageUsers(user)) {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
-  }
+
 
   try {
     await connectDB();

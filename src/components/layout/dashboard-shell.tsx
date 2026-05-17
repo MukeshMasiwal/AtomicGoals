@@ -11,6 +11,7 @@ import type { Role } from "@/types";
 type DashboardShellProps = {
   title: string;
   userName: string;
+  avatar?: string;
   roleLabel: string;
   role: Role;
   children: React.ReactNode;
@@ -19,6 +20,7 @@ type DashboardShellProps = {
 export default function DashboardShell({
   title,
   userName,
+  avatar,
   roleLabel,
   role,
   children,
@@ -59,6 +61,7 @@ export default function DashboardShell({
         <TopNav
           title={title}
           userName={userName}
+          avatar={avatar}
           roleLabel={roleLabel}
           onToggleSidebar={() => setMobileOpen(true)}
         />

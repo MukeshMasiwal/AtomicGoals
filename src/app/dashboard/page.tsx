@@ -16,6 +16,7 @@ export default async function DashboardPage() {
     <DashboardShell
       title="Dashboard"
       userName={data.user.name}
+      avatar={data.user.avatar}
       roleLabel={data.user.roleLabel}
       role={session.role}
     >
