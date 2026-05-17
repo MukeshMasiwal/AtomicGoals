@@ -26,6 +26,6 @@ Seed details:
 ## Login page
 
 Visit:
-	http://localhost:3000/login
+	https://atomic-goals-kappa.vercel.app/
 
 The login form posts to /api/login and validates email + password against MongoDB.
