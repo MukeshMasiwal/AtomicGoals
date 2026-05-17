@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, ShieldCheck, UserCog, User, AlertTriangle } from "lucide-react";
+import { Loader2, ShieldCheck, UserCog, User, AlertTriangle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,20 @@ export default function LoginPage() {
   const [otp, setOtp] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  useEffect(() => {
+    if (timeLeft > 0 && step === "otp") {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [timeLeft, step]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
 
   const redirectBasedOnRole = (role?: string) => {
     switch (role) {
@@ -70,6 +84,7 @@ export default function LoginPage() {
       setStatus("success");
       setMessage("A login code has been sent to your email.");
       setStep("otp");
+      setTimeLeft(600); // 10 minutes
     } catch {
       setStatus("error");
       setMessage("An error occurred. Please try again.");
@@ -245,7 +260,7 @@ export default function LoginPage() {
                 <Button 
                   type="submit" 
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-2" 
-                  disabled={status === "loading" || otp.length < 5}
+                  disabled={status === "loading" || otp.length < 5 || timeLeft === 0}
                 >
                   {status === "loading" ? (
                     <>
@@ -257,18 +272,43 @@ export default function LoginPage() {
                   )}
                 </Button>
 
-                <div className="text-center mt-4">
-                  <button 
-                    type="button" 
-                    onClick={() => {
-                      setStep("email");
-                      setStatus("idle");
-                      setMessage("");
-                    }}
-                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-                  >
-                    Back to email
-                  </button>
+                <div className="flex flex-col items-center gap-3 mt-6">
+                  {timeLeft > 0 ? (
+                    <div className="flex items-center gap-1.5 text-sm text-slate-500 font-medium bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800">
+                      <Clock className="h-3.5 w-3.5" />
+                      Code expires in {formatTime(timeLeft)}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-amber-600 dark:text-amber-500 font-medium">
+                      Code expired. Please request a new one.
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-4 text-sm mt-2">
+                    <button 
+                      type="button" 
+                      onClick={(e: any) => {
+                        e.preventDefault();
+                        if (timeLeft === 0) handleSendOtp(e);
+                      }}
+                      disabled={timeLeft > 0 || status === "loading"}
+                      className={`font-medium ${timeLeft > 0 ? "text-slate-400 cursor-not-allowed" : "text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"}`}
+                    >
+                      Resend code
+                    </button>
+                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setStep("email");
+                        setStatus("idle");
+                        setMessage("");
+                      }}
+                      className="font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    >
+                      Change email
+                    </button>
+                  </div>
                 </div>
               </form>
             )}

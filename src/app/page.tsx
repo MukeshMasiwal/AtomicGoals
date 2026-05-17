@@ -1,345 +1,235 @@
 import Link from "next/link";
-
-import DashboardCharts from "@/components/charts/HomeDashboardChartsWrapper";
 import { Logo } from "@/components/ui/logo";
+import { Button } from "@/components/ui/button";
+import { 
+  Target, 
+  Workflow, 
+  Calendar, 
+  LayoutDashboard, 
+  FileBarChart, 
+  ShieldCheck,
+  ChevronRight,
+  ArrowRight
+} from "lucide-react";
 
 const features = [
   {
     title: "Goal Management",
-    description: "Create, assign, and align goals across teams with clear ownership.",
+    description: "Create, assign, and align goals across teams with clear ownership and measurable key results.",
+    icon: Target,
+    color: "text-blue-500",
+    bg: "bg-blue-50 dark:bg-blue-500/10"
   },
   {
     title: "Approval Workflow",
-    description: "Route goals for manager review and capture approvals in minutes.",
+    description: "Route goals for manager review and capture approvals seamlessly in minutes.",
+    icon: Workflow,
+    color: "text-indigo-500",
+    bg: "bg-indigo-50 dark:bg-indigo-500/10"
   },
   {
     title: "Quarterly Tracking",
-    description: "Track outcomes by quarter with milestones, health, and blockers.",
+    description: "Track outcomes by quarter with milestones, health metrics, and early blocker detection.",
+    icon: Calendar,
+    color: "text-emerald-500",
+    bg: "bg-emerald-50 dark:bg-emerald-500/10"
   },
   {
     title: "Real-Time Dashboards",
-    description: "Monitor performance trends with live progress and health signals.",
+    description: "Monitor performance trends with live progress bars and aggregated team health signals.",
+    icon: LayoutDashboard,
+    color: "text-amber-500",
+    bg: "bg-amber-50 dark:bg-amber-500/10"
   },
   {
     title: "Reporting & Export",
-    description: "Generate board-ready reports with shareable, exportable views.",
+    description: "Generate board-ready reports with shareable, exportable views for all stakeholders.",
+    icon: FileBarChart,
+    color: "text-rose-500",
+    bg: "bg-rose-50 dark:bg-rose-500/10"
   },
   {
     title: "Audit Tracking",
-    description: "Maintain compliance with a clear audit trail for every change.",
+    description: "Maintain strict compliance with an automated, immutable audit trail for every change.",
+    icon: ShieldCheck,
+    color: "text-purple-500",
+    bg: "bg-purple-50 dark:bg-purple-500/10"
   },
 ];
 
 const workflowSteps = [
-  "Employee Creates Goal",
-  "Manager Reviews Goal",
-  "Goal Approved",
-  "Quarterly Updates",
-  "Performance Tracking",
-  "Admin Reporting",
-];
-
-const roles = [
-  {
-    title: "Employee",
-    items: [
-      "Create and update personal goals",
-      "Track quarterly progress",
-      "Request feedback and alignment",
-    ],
-  },
-  {
-    title: "Manager",
-    items: [
-      "Review and approve goals",
-      "Monitor team performance",
-      "Coach with real-time insights",
-    ],
-  },
-  {
-    title: "Admin/HR",
-    items: [
-      "Manage templates and policies",
-      "Audit goal history and approvals",
-      "Export reports and analytics",
-    ],
-  },
-];
-
-const stats = [
-  { value: "90%", label: "Faster Goal Approvals" },
-  { value: "100%", label: "Centralized Tracking" },
-  { value: "24/7", label: "Performance Visibility" },
-  { value: "4X", label: "Structured Quarterly Reviews" },
+  { step: "01", title: "Employee Creates Goal", desc: "Set clear objectives using structured templates." },
+  { step: "02", title: "Manager Reviews Goal", desc: "Align on expectations and approve quickly." },
+  { step: "03", title: "Performance Tracking", desc: "Log real-time progress and milestones." },
+  { step: "04", title: "Quarterly Review", desc: "Evaluate outcomes and plan the next cycle." },
 ];
 
 export default function Home() {
   return (
-    <div className="site">
-      <header className="navbar" id="home">
-        <div className="container nav-inner">
-          <div className="brand">
-            <Logo />
-          </div>
-          <nav className="nav-links">
-            <a href="#home">Home</a>
-            <a href="#features">Features</a>
-            <a href="#workflow">Workflow</a>
-            <a href="#about">About</a>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100">
+      
+      {/* Navigation */}
+      <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <Logo />
+          <nav className="hidden md:flex gap-8 text-sm font-medium text-slate-600 dark:text-slate-300">
+            <Link href="#features" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition">Features</Link>
+            <Link href="#workflow" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition">Workflow</Link>
+            <Link href="#impact" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition">Impact</Link>
           </nav>
-          <div className="nav-actions">
-            <Link className="button small ghost" href="/dashboard">
-              Dashboard
+          <div className="flex items-center gap-3">
+            <Link href="/login">
+              <Button variant="ghost" className="hidden sm:inline-flex text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                Log In
+              </Button>
             </Link>
-            <Link className="button small" href="/login">
-              Login
+            <Link href="/login">
+              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
+                Get Started
+              </Button>
             </Link>
           </div>
         </div>
       </header>
 
       <main>
-        <section className="hero">
-          <div className="container hero-grid">
-            <div className="hero-copy">
-              <p className="eyebrow">GoalTrack Portal</p>
-              <h1>Modern Goal Tracking for High-Performance Teams</h1>
-              <p className="hero-subtitle">
-                Empower employees to create goals, managers to approve them, and
-                leadership to track quarterly progress in one centralized
-                performance platform.
-              </p>
-              <div className="cta-row">
-                <a className="button" href="#features">
-                  Get Started
-                </a>
-                <a className="button ghost" href="#dashboard">
-                  View Demo
-                </a>
-              </div>
-              <div className="hero-badges">
-                <div>
-                  <span className="badge-label">Approval SLA</span>
-                  <strong>48 hrs</strong>
-                </div>
-                <div>
-                  <span className="badge-label">Goals On Track</span>
-                  <strong>78%</strong>
-                </div>
-                <div>
-                  <span className="badge-label">Teams Active</span>
-                  <strong>24</strong>
-                </div>
-              </div>
-            </div>
-
-            <div className="hero-preview">
-              <div className="dashboard-card">
-                <div className="dashboard-header">
-                  <div>
-                    <p className="label">Quarterly Overview</p>
-                    <h3>Performance Snapshot</h3>
-                  </div>
-                  <span className="status-pill">Live</span>
-                </div>
-                <div className="kpi-grid">
-                  <div className="kpi-card">
-                    <p>Goals Completed</p>
-                    <strong>1,284</strong>
-                  </div>
-                  <div className="kpi-card">
-                    <p>Approvals</p>
-                    <strong>94%</strong>
-                  </div>
-                  <div className="kpi-card">
-                    <p>At-Risk</p>
-                    <strong>12%</strong>
-                  </div>
-                </div>
-                <div className="progress-list">
-                  <div>
-                    <div className="progress-label">
-                      <span>Engineering</span>
-                      <span>82%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div style={{ width: "82%" }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="progress-label">
-                      <span>Sales</span>
-                      <span>71%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div style={{ width: "71%" }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="progress-label">
-                      <span>Product</span>
-                      <span>88%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div style={{ width: "88%" }} />
-                    </div>
-                  </div>
-                </div>
-                <div className="approval-grid">
-                  <div>
-                    <p>Pending Reviews</p>
-                    <strong>34</strong>
-                  </div>
-                  <div>
-                    <p>Avg. Time to Approve</p>
-                    <strong>1.6 days</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
+        
+        {/* Hero Section */}
+        <section className="relative overflow-hidden pt-24 pb-32 sm:pt-32 sm:pb-40 lg:pb-48">
+          <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
+            <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-indigo-200 to-indigo-600 opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
           </div>
-        </section>
-
-        <section className="section" id="features">
-          <div className="container">
-            <div className="section-heading">
-              <p className="eyebrow">Features</p>
-              <h2>Everything you need to run goal cycles</h2>
-              <p className="section-subtitle">
-                Streamline approvals, align priorities, and deliver real-time
-                performance visibility across the organization.
-              </p>
+          
+          <div className="container mx-auto px-4 text-center max-w-4xl">
+            <div className="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400 ring-1 ring-inset ring-indigo-500/20 mb-8">
+              AtomicGoals Performance Portal
             </div>
-            <div className="feature-grid">
-              {features.map((feature) => (
-                <div className="feature-card" key={feature.title}>
-                  <div className="feature-icon" aria-hidden>
-                    <span />
-                  </div>
-                  <h3>{feature.title}</h3>
-                  <p>{feature.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section workflow" id="workflow">
-          <div className="container">
-            <div className="section-heading">
-              <p className="eyebrow">Workflow</p>
-              <h2>Aligned, transparent, and fast</h2>
-            </div>
-            <div className="workflow-steps">
-              {workflowSteps.map((step, index) => (
-                <div className="workflow-step" key={step}>
-                  <span className="step-index">0{index + 1}</span>
-                  <p>{step}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section" id="about">
-          <div className="container">
-            <div className="section-heading">
-              <p className="eyebrow">Role-Based Access</p>
-              <h2>Purpose-built for every role</h2>
-            </div>
-            <div className="role-grid">
-              {roles.map((role) => (
-                <div className="role-card" key={role.title}>
-                  <h3>{role.title}</h3>
-                  <ul>
-                    {role.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section stats">
-          <div className="container">
-            <div className="section-heading">
-              <p className="eyebrow">Impact</p>
-              <h2>Measurable results in every review cycle</h2>
-            </div>
-            <div className="stats-grid">
-              {stats.map((stat) => (
-                <div className="metric-card" key={stat.label}>
-                  <strong>{stat.value}</strong>
-                  <span>{stat.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section" id="dashboard">
-          <div className="container">
-            <div className="section-heading">
-              <p className="eyebrow">Dashboard Preview</p>
-              <h2>See goals, approvals, and performance at a glance</h2>
-              <p className="section-subtitle">
-                Realistic demo data shows how AtomicGoals keeps every
-                stakeholder informed.
-              </p>
-            </div>
-            <DashboardCharts />
-            <div className="data-table">
-              <div className="table-row table-header">
-                <span>Department</span>
-                <span>Goals On Track</span>
-                <span>Approvals</span>
-                <span>Completion</span>
-              </div>
-              <div className="table-row">
-                <span>Engineering</span>
-                <span>82%</span>
-                <span>96%</span>
-                <span>Q2 78%</span>
-              </div>
-              <div className="table-row">
-                <span>Sales</span>
-                <span>71%</span>
-                <span>91%</span>
-                <span>Q2 69%</span>
-              </div>
-              <div className="table-row">
-                <span>Marketing</span>
-                <span>76%</span>
-                <span>93%</span>
-                <span>Q2 74%</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="cta-banner">
-          <div className="container cta-content">
-            <div>
-              <p className="eyebrow">Ready to launch</p>
-              <h2>Start Managing Goals Smarter</h2>
-              <p>
-                Bring clarity to performance cycles with a modern platform
-                designed for speed, accountability, and measurable outcomes.
-              </p>
-            </div>
-            <div className="cta-row">
-              <Link className="button" href="/login">
-                Login
+            <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-8 leading-tight">
+              Modern Goal Tracking for <br className="hidden sm:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-sky-500">High-Performance Teams</span>
+            </h1>
+            <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 mb-10 max-w-2xl mx-auto">
+              Empower employees to create goals, managers to approve them, and leadership to track quarterly progress in one centralized platform.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/login">
+                <Button size="lg" className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white shadow-md text-base h-12 px-8">
+                  Get Started for Free <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </Link>
-              <a className="button ghost" href="#home">
-                Request Demo
-              </a>
             </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section id="features" className="py-24 bg-white dark:bg-slate-900">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <div className="text-center mb-16 max-w-2xl mx-auto">
+              <h2 className="text-base font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">Features</h2>
+              <p className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+                Everything you need to run goal cycles
+              </p>
+              <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
+                Streamline approvals, align priorities, and deliver real-time performance visibility across the organization.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {features.map((feature) => (
+                <div key={feature.title} className="group relative p-8 rounded-3xl bg-slate-50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-none transition-all duration-300">
+                  <div className={`inline-flex items-center justify-center rounded-xl p-3 mb-6 ${feature.bg}`}>
+                    <feature.icon className={`h-6 w-6 ${feature.color}`} />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">
+                    {feature.title}
+                  </h3>
+                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-base">
+                    {feature.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Workflow Section */}
+        <section id="workflow" className="py-24 bg-slate-50 dark:bg-slate-950">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <div className="text-center mb-16">
+              <h2 className="text-base font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">Workflow</h2>
+              <p className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+                Aligned, transparent, and fast
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+              <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-0.5 bg-slate-200 dark:bg-slate-800 -z-10" />
+              {workflowSteps.map((step) => (
+                <div key={step.step} className="relative flex flex-col items-center text-center">
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white dark:bg-slate-900 border-4 border-slate-50 dark:border-slate-950 shadow-md mb-6 relative">
+                    <div className="absolute inset-2 rounded-full border border-indigo-100 dark:border-indigo-900 flex items-center justify-center bg-indigo-50/50 dark:bg-indigo-500/10 text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                      {step.step}
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{step.title}</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm max-w-[200px]">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Impact Section */}
+        <section id="impact" className="py-24 bg-indigo-600 dark:bg-indigo-950 text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
+          <div className="container mx-auto px-4 max-w-7xl relative z-10">
+            <div className="text-center mb-16 max-w-2xl mx-auto">
+              <h2 className="text-base font-semibold text-indigo-200 uppercase tracking-wide">Impact</h2>
+              <p className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                Measurable results in every cycle
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              {[
+                { label: "Faster Goal Approvals", value: "90%" },
+                { label: "Centralized Tracking", value: "100%" },
+                { label: "Performance Visibility", value: "24/7" },
+                { label: "Quarterly Reviews", value: "4X" },
+              ].map((stat) => (
+                <div key={stat.label} className="p-6">
+                  <div className="text-4xl md:text-5xl font-extrabold mb-2">{stat.value}</div>
+                  <div className="text-indigo-200 font-medium">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-24 bg-white dark:bg-slate-900">
+          <div className="container mx-auto px-4 max-w-4xl text-center">
+            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-4xl mb-6">
+              Start Managing Goals Smarter
+            </h2>
+            <p className="text-lg text-slate-600 dark:text-slate-400 mb-10 max-w-2xl mx-auto">
+              Bring clarity to performance cycles with a modern platform designed for speed, accountability, and measurable outcomes.
+            </p>
+            <Link href="/login">
+              <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg text-base h-14 px-10 rounded-full">
+                Get Started Now <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
           </div>
         </section>
       </main>
+      
+      <footer className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 py-12">
+        <div className="container mx-auto px-4 flex justify-between items-center text-sm text-slate-500 dark:text-slate-400">
+          <div>&copy; {new Date().getFullYear()} AtomicGoals. All rights reserved.</div>
+          <Logo showText={false} />
+        </div>
+      </footer>
     </div>
   );
 }
