@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, ShieldCheck, UserCog, Users, AlertTriangle } from "lucide-react";
+import { Loader2, ShieldCheck, UserCog, Users, AlertTriangle, User, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { Input } from "@/components/ui/input";
@@ -270,66 +270,44 @@ export default function LoginPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-800/50"
           >
-            <div className="flex flex-col items-center mb-4">
-              <div className="flex items-center gap-2 text-amber-600 mb-2 bg-amber-50 dark:bg-amber-950/30 px-2.5 py-1 rounded-full text-xs font-semibold border border-amber-200/50 dark:border-amber-900/50">
-                <AlertTriangle className="h-3.5 w-3.5" />
+            <div className="flex flex-col items-center mb-6">
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-indigo-500 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-950/30 px-2.5 py-1 rounded-full border border-indigo-100/50 dark:border-indigo-800/30 mb-3">
+                <AlertTriangle className="h-3 w-3" />
                 Development Only
               </div>
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Quick Demo Access</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Development-only seed users</p>
+              <h3 className="text-sm font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Demo Credentials</h3>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              <button
-                type="button"
-                onClick={() => handleSeedLogin("admin@test.com")}
-                disabled={status === "loading"}
-                className="group flex items-center justify-between p-3 rounded-xl border border-indigo-100 bg-white/60 hover:bg-indigo-50/80 hover:border-indigo-300 transition-all duration-300 dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-indigo-950/30 dark:hover:border-indigo-800/50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="bg-indigo-100 text-indigo-600 p-2 rounded-lg group-hover:scale-110 transition-transform duration-300 dark:bg-indigo-900/50 dark:text-indigo-400">
-                    <ShieldCheck className="h-5 w-5" />
+            <div className="flex flex-col gap-3">
+              {[
+                { role: "Admin", email: "admin@goaltrack.com", icon: ShieldCheck },
+                { role: "Manager", email: "manager@goaltrack.com", icon: Briefcase },
+                { role: "Employee1", email: "employee1@goaltrack.com", icon: User }
+              ].map((cred) => (
+                <button
+                  key={cred.email}
+                  type="button"
+                  onClick={() => handleSeedLogin(cred.email)}
+                  disabled={status === "loading"}
+                  className="group relative flex items-center justify-between p-4 rounded-2xl border border-slate-200/60 bg-white/50 backdrop-blur-xl shadow-sm transition-all duration-500 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/10 dark:border-slate-800/80 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-indigo-500/30 overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/0 to-indigo-500/0 group-hover:via-indigo-500/5 transition-all duration-500" />
+                  
+                  <div className="relative z-10 flex items-center gap-4">
+                    <div className="flex items-center justify-center h-10 w-10 rounded-xl border border-slate-200/50 bg-white/80 shadow-sm transition-transform duration-500 group-hover:scale-110 dark:border-slate-700/50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300">
+                      <cred.icon className="h-4 w-4" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-bold text-sm text-slate-900 dark:text-white tracking-tight">
+                        {cred.role}
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                        {cred.email}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <div className="font-semibold text-sm text-slate-700 dark:text-slate-300">Login as Admin</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-500">admin@test.com</div>
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSeedLogin("manager@test.com")}
-                disabled={status === "loading"}
-                className="group flex items-center justify-between p-3 rounded-xl border border-emerald-100 bg-white/60 hover:bg-emerald-50/80 hover:border-emerald-300 transition-all duration-300 dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-emerald-950/30 dark:hover:border-emerald-800/50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="bg-emerald-100 text-emerald-600 p-2 rounded-lg group-hover:scale-110 transition-transform duration-300 dark:bg-emerald-900/50 dark:text-emerald-400">
-                    <UserCog className="h-5 w-5" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-semibold text-sm text-slate-700 dark:text-slate-300">Login as Manager</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-500">manager@test.com</div>
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSeedLogin("employee@test.com")}
-                disabled={status === "loading"}
-                className="group flex items-center justify-between p-3 rounded-xl border border-sky-100 bg-white/60 hover:bg-sky-50/80 hover:border-sky-300 transition-all duration-300 dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-sky-950/30 dark:hover:border-sky-800/50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="bg-sky-100 text-sky-600 p-2 rounded-lg group-hover:scale-110 transition-transform duration-300 dark:bg-sky-900/50 dark:text-sky-400">
-                    <Users className="h-5 w-5" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-semibold text-sm text-slate-700 dark:text-slate-300">Login as Employee</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-500">employee@test.com</div>
-                  </div>
-                </div>
-              </button>
+                </button>
+              ))}
             </div>
           </motion.div>
         )}
