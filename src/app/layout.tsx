@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GoalTrack | Performance Portal",
+  title: "AtomicGoals | Performance Portal",
   description:
     "Goal setting and performance tracking portal for employees, managers, and HR.",
 };
