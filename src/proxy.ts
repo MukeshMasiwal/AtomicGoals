@@ -5,7 +5,7 @@ const SESSION_COOKIE = "goaltrack_session";
 
 const publicPaths = ["/", "/login", "/signup", "/forgot-password"];
 const publicPrefixes = ["/reset-password"];
-const publicApiPrefixes = ["/api/auth/login", "/api/auth/signup", "/api/auth/forgot-password", "/api/auth/reset-password"];
+const publicApiPrefixes = ["/api/auth/login", "/api/auth/signup", "/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/send-otp", "/api/auth/verify-otp", "/api/auth/seed-login"];
 
 function isPublicPath(pathname: string): boolean {
   if (publicPaths.includes(pathname)) {
@@ -17,23 +17,22 @@ function isPublicPath(pathname: string): boolean {
   return publicApiPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
-async function verifyToken(token: string): Promise<boolean> {
+async function getSessionPayload(token: string) {
   const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    return false;
-  }
+  if (!secret) return null;
 
   try {
-    await jwtVerify(token, new TextEncoder().encode(secret));
-    return true;
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret));
+    return payload as { role?: string };
   } catch {
-    return false;
+    return null;
   }
 }
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Skip static assets
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
@@ -42,13 +41,30 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (isPublicPath(pathname)) {
+  const token = request.cookies.get(SESSION_COOKIE)?.value;
+  const session = token ? await getSessionPayload(token) : null;
+  const isAuthenticated = !!session;
+
+  const isPublic = isPublicPath(pathname);
+
+  // If user is authenticated and trying to access login/signup, redirect to their role dashboard
+  if (isAuthenticated && (pathname === "/login" || pathname === "/signup")) {
+    const role = session?.role;
+    let redirectPath = "/dashboard";
+    
+    if (role === "admin") redirectPath = "/admin";
+    else if (role === "manager") redirectPath = "/manager";
+    else if (role === "employee") redirectPath = "/employee";
+
+    return NextResponse.redirect(new URL(redirectPath, request.url));
+  }
+
+  // Allow access to public paths if not authenticated
+  if (isPublic) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get(SESSION_COOKIE)?.value;
-  const isAuthenticated = token ? await verifyToken(token) : false;
-
+  // Redirect unauthenticated users trying to access protected paths
   if (!isAuthenticated) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -63,5 +79,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/api/goals/:path*", "/api/users/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };

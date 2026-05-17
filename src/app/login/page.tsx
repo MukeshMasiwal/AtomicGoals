@@ -19,45 +19,96 @@ import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 
 type Status = "idle" | "loading" | "success" | "error";
+type Step = "email" | "otp";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
 
-  async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
+  const redirectBasedOnRole = (role?: string) => {
+    switch (role) {
+      case "admin":
+        router.push("/admin");
+        break;
+      case "manager":
+        router.push("/manager");
+        break;
+      case "employee":
+        router.push("/employee");
+        break;
+      default:
+        router.push("/dashboard");
+    }
+  };
+
+  async function handleSendOtp(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!email || !password) return;
+    if (!email) return;
 
     setStatus("loading");
     setMessage("");
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email }),
+      });
+
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+
+      if (!response.ok) {
+        setStatus("error");
+        setMessage(data.error ?? "Failed to send OTP.");
+        return;
+      }
+
+      setStatus("success");
+      setMessage("A login code has been sent to your email.");
+      setStep("otp");
+    } catch {
+      setStatus("error");
+      setMessage("An error occurred. Please try again.");
+    }
+  }
+
+  async function handleVerifyOtp(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!email || !otp) return;
+
+    setStatus("loading");
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
       });
 
       const data = (await response.json().catch(() => ({}))) as {
         error?: string;
-        user?: { email?: string; name?: string };
+        user?: { email?: string; name?: string; role?: string };
       };
 
       if (!response.ok) {
         setStatus("error");
-        setMessage(data.error ?? "Invalid credentials.");
+        setMessage(data.error ?? "Invalid login code.");
         return;
       }
 
       setStatus("success");
       setMessage(`Welcome, ${data.user?.name || email}. Redirecting…`);
-      router.push("/dashboard");
+      
+      // Perform immediate redirect based on role
+      redirectBasedOnRole(data.user?.role);
     } catch {
       setStatus("error");
-      setMessage("Login failed. Please try again.");
+      setMessage("Verification failed. Please try again.");
     }
   }
 
@@ -77,7 +128,7 @@ export default function LoginPage() {
 
       const data = (await response.json().catch(() => ({}))) as {
         error?: string;
-        user?: { email?: string; name?: string };
+        user?: { email?: string; name?: string; role?: string };
       };
 
       if (!response.ok) {
@@ -88,7 +139,9 @@ export default function LoginPage() {
 
       setStatus("success");
       setMessage(`Welcome, ${data.user?.name || seedEmail}. Redirecting…`);
-      router.push("/dashboard");
+      
+      // Perform immediate redirect based on role
+      redirectBasedOnRole(data.user?.role);
     } catch {
       setStatus("error");
       setMessage("Seed login error. Please try again.");
@@ -108,78 +161,117 @@ export default function LoginPage() {
             <Logo className="mb-2" />
             <div className="space-y-1">
               <CardTitle className="text-3xl font-bold tracking-tight">
-                Welcome Back
+                Welcome
               </CardTitle>
               <CardDescription className="text-base">
-                Enter your credentials to access your account.
+                {step === "email" 
+                  ? "Enter your email to receive a login code." 
+                  : "Enter the 6-digit code sent to your email."}
               </CardDescription>
             </div>
           </CardHeader>
           
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              {status === "error" && (
-                <div className="p-3 bg-red-50 text-red-600 border border-red-200 rounded-md text-sm dark:bg-red-900/20 dark:border-red-800/30 dark:text-red-400">
-                  {message}
-                </div>
-              )}
-              {status === "success" && (
-                <div className="p-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-sm dark:bg-emerald-900/20 dark:border-emerald-800/30 dark:text-emerald-400">
-                  {message}
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="bg-transparent"
-                  disabled={status === "loading"}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="bg-transparent"
-                  disabled={status === "loading"}
-                />
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-2" 
-                disabled={status === "loading" || !email || !password}
-              >
-                {status === "loading" ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  "Sign In"
+            {step === "email" ? (
+              <form onSubmit={handleSendOtp} className="space-y-4">
+                {status === "error" && (
+                  <div className="p-3 bg-red-50 text-red-600 border border-red-200 rounded-md text-sm dark:bg-red-900/20 dark:border-red-800/30 dark:text-red-400">
+                    {message}
+                  </div>
                 )}
-              </Button>
-            </form>
-            <div className="mt-6 text-center text-sm text-slate-500">
-              Don't have an account?{" "}
-              <Link href="/signup" className="text-indigo-600 hover:underline dark:text-indigo-400">
-                Sign up
-              </Link>
-            </div>
+                {status === "success" && (
+                  <div className="p-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-sm dark:bg-emerald-900/20 dark:border-emerald-800/30 dark:text-emerald-400">
+                    {message}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="bg-transparent"
+                    disabled={status === "loading"}
+                  />
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-2" 
+                  disabled={status === "loading" || !email}
+                >
+                  {status === "loading" ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending code...
+                    </>
+                  ) : (
+                    "Send Login Code"
+                  )}
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} className="space-y-4">
+                {status === "error" && (
+                  <div className="p-3 bg-red-50 text-red-600 border border-red-200 rounded-md text-sm dark:bg-red-900/20 dark:border-red-800/30 dark:text-red-400">
+                    {message}
+                  </div>
+                )}
+                {status === "success" && (
+                  <div className="p-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-sm dark:bg-emerald-900/20 dark:border-emerald-800/30 dark:text-emerald-400">
+                    {message}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="otp">Login Code</Label>
+                  <Input
+                    id="otp"
+                    type="text"
+                    placeholder="123456"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    required
+                    className="bg-transparent text-center text-lg tracking-widest"
+                    maxLength={6}
+                    disabled={status === "loading"}
+                  />
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-2" 
+                  disabled={status === "loading" || otp.length < 5}
+                >
+                  {status === "loading" ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    "Verify & Login"
+                  )}
+                </Button>
+
+                <div className="text-center mt-4">
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setStep("email");
+                      setStatus("idle");
+                      setMessage("");
+                    }}
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                  >
+                    Back to email
+                  </button>
+                </div>
+              </form>
+            )}
           </CardContent>
 
           <CardFooter className="pt-2 text-center text-sm flex flex-col gap-2 border-t border-slate-100 dark:border-slate-800 mt-4">
