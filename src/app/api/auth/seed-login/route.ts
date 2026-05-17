@@ -9,14 +9,6 @@ import { User } from "@/models/User";
 import type { Role } from "@/types";
 
 export async function POST(request: Request) {
-  // STRICT PRODUCTION SAFETY CHECK
-  if (process.env.NODE_ENV !== "development") {
-    return Response.json(
-      { error: "Seed login is only available in development mode." },
-      { status: 403 }
-    );
-  }
-
   try {
     const body = await request.json();
     const email = body.email?.trim().toLowerCase();

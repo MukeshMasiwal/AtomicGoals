@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, ShieldCheck, UserCog, User, AlertTriangle, Clock } from "lucide-react";
+import { Loader2, ShieldCheck, UserCog, User, AlertTriangle, Clock, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { Input } from "@/components/ui/input";
@@ -117,10 +117,8 @@ export default function LoginPage() {
     }
   }
 
-  // Development-only helper function for quick seed login
+  // Helper function for quick seed login
   async function handleSeedLogin(seedEmail: string) {
-    // Temporarily removing strict env check to debug visibility
-    // if (process.env.NODE_ENV === "production") return;
     
     setStatus("loading");
     setMessage("");
@@ -301,6 +299,18 @@ export default function LoginPage() {
                     </button>
                   </div>
                 </div>
+
+                <div className="mt-6 p-4 rounded-xl bg-slate-50 border border-slate-100 dark:bg-slate-900/40 dark:border-slate-800/60 flex gap-3 text-left">
+                  <Info className="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-200">
+                      Didn't receive the OTP? Please check your Spam or Promotions folder.
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      Email delivery can occasionally take a few moments.
+                    </p>
+                  </div>
+                </div>
               </form>
             )}
           </CardContent>
@@ -312,7 +322,7 @@ export default function LoginPage() {
           </CardFooter>
         </Card>
 
-        {/* Development-only seed login section (Temporarily visible in all envs for debugging) */}
+        {/* Seed login section (Visible for Demo Mode) */}
         {(
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
@@ -321,12 +331,11 @@ export default function LoginPage() {
             className="mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-800/50"
           >
             <div className="flex flex-col items-center mb-6">
-              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-indigo-600 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-100 dark:border-indigo-500/20 mb-3">
-                <AlertTriangle className="h-3 w-3" />
-                Development Only
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-sky-600 bg-sky-50 dark:text-sky-300 dark:bg-sky-500/10 px-2.5 py-1 rounded-full border border-sky-100 dark:border-sky-500/20 mb-3">
+                Interactive Demo
               </div>
               <h3 className="text-sm font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">DEMO CREDENTIALS</h3>
-              <p className="text-xs text-slate-400 mt-2">Current Environment: {process.env.NODE_ENV}</p>
+              <p className="text-xs text-slate-400 mt-2 text-center max-w-[200px]">Click a role below to bypass email verification.</p>
             </div>
 
             <div className="flex flex-col gap-3">
