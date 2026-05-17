@@ -20,6 +20,7 @@ const userSchema = new Schema(
     team: { type: String, default: "", trim: true },
     verified: { type: Boolean, default: false },
     isSeedUser: { type: Boolean, default: false },
+    password: { type: String, select: false },
     otp: { type: String, select: false },
     otpExpiry: { type: Date, select: false },
   },
