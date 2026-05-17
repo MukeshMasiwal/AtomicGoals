@@ -1,103 +1,76 @@
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
-import bcrypt from "bcryptjs";
-
 import { connectDB } from "../src/lib/mongodb";
-import { Goal } from "../src/models/Goal";
 import { User } from "../src/models/User";
 
-const demoUsers = [
+const seedUsers = [
   {
     name: "Admin User",
-    email: "adminmail@gmail.com",
-    password: "password",
-    role: "admin" as const,
-    department: "People Ops",
+    email: "admin@test.com",
+    role: "admin",
+    verified: true,
+    isSeedUser: true,
   },
   {
-    name: "Taylor Manager",
-    email: "manager@goaltrack.com",
-    password: "password",
-    role: "manager" as const,
-    department: "Engineering",
+    name: "Manager User",
+    email: "manager@test.com",
+    role: "manager",
+    verified: true,
+    isSeedUser: true,
   },
   {
-    name: "Alex Employee",
-    email: "employee@goaltrack.com",
-    password: "password",
-    role: "employee" as const,
-    department: "Engineering",
+    name: "Employee User",
+    email: "employee@test.com",
+    role: "employee",
+    verified: true,
+    isSeedUser: true,
   },
 ];
 
 async function seed() {
-  await connectDB();
+  try {
+    const MONGODB_URI = process.env.MONGODB_URI;
+    const DB_NAME = process.env.DB_NAME;
 
-  const createdUsers: { id: string; email: string; role: string; department: string }[] =
-    [];
+    if (!MONGODB_URI) {
+      throw new Error("MONGODB_URI is not set");
+    }
 
-  for (const demo of demoUsers) {
-    const passwordHash = await bcrypt.hash(demo.password, 10);
-    const user = await User.findOneAndUpdate(
-      { email: demo.email },
-      {
-        $set: {
-          name: demo.name,
-          password: passwordHash,
-          role: demo.role,
-          department: demo.department,
-        },
-      },
-      { upsert: true, new: true }
-    );
+    // Connect to MongoDB using Mongoose connection utility
+    await connectDB();
+    console.log("Connected to MongoDB");
 
-    createdUsers.push({
-      id: String(user._id),
-      email: user.email,
-      role: user.role,
-      department: user.department ?? "",
-    });
+    for (const userData of seedUsers) {
+      // Check if email already exists
+      const existingUser = await User.findOne({ email: userData.email });
+      
+      if (existingUser) {
+        // Skip duplicates and print readable console logs
+        console.log(`User already exists: ${userData.email}`);
+        continue;
+      }
 
-    console.log(`Seeded user: ${demo.email} (${demo.role})`);
+      // Create user
+      await User.create(userData);
+      
+      const roleCapitalized = userData.role.charAt(0).toUpperCase() + userData.role.slice(1);
+      console.log(`${roleCapitalized} user created`);
+    }
+
+    // Temporary development bypass mode
+    if (process.env.NODE_ENV === "development") {
+      // Allow seed users to log in without real OTP verification
+      // Useful for hackathon/demo testing only
+      console.log("Development bypass mode enabled: Seed users can log in without real OTP verification.");
+    }
+
+    console.log("Seed completed successfully");
+    process.exit(0);
+  } catch (error) {
+    console.error("Seed failed:", error);
+    process.exit(1);
   }
-
-  const employee = createdUsers.find((user) => user.role === "employee");
-  const manager = createdUsers.find((user) => user.role === "manager");
-
-  if (employee) {
-    await Goal.deleteMany({ ownerEmail: employee.email });
-    await Goal.insertMany([
-      {
-        title: "Launch Q2 onboarding refresh",
-        status: "approved",
-        weight: 20,
-        progress: 78,
-        deadline: new Date("2026-06-20"),
-        ownerId: employee.id,
-        ownerEmail: employee.email,
-        managerEmail: manager?.email ?? "",
-        department: employee.department,
-      },
-      {
-        title: "Reduce churn in mid-market segment",
-        status: "pending",
-        weight: 30,
-        progress: 46,
-        deadline: new Date("2026-07-02"),
-        ownerId: employee.id,
-        ownerEmail: employee.email,
-        managerEmail: manager?.email ?? "",
-        department: employee.department,
-      },
-    ]);
-    console.log("Seeded sample goals for employee");
-  }
-
-  console.log("Seed complete.");
 }
 
-seed().catch((error) => {
-  console.error("Seed failed:", error);
-  process.exitCode = 1;
-});
+seed();

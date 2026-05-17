@@ -11,7 +11,6 @@ const userSchema = new Schema(
       trim: true,
       index: true,
     },
-    password: { type: String, select: false }, // Optional for OTP-based auth
     role: {
       type: String,
       enum: ["employee", "manager", "admin"],
@@ -19,10 +18,10 @@ const userSchema = new Schema(
     },
     department: { type: String, default: "", trim: true },
     team: { type: String, default: "", trim: true },
-    resetPasswordToken: { type: String, select: false },
-    resetPasswordExpire: { type: Date, select: false },
+    verified: { type: Boolean, default: false },
+    isSeedUser: { type: Boolean, default: false },
     otp: { type: String, select: false },
-    otpExpire: { type: Date, select: false },
+    otpExpiry: { type: Date, select: false },
   },
   { timestamps: true, collection: "users" }
 );
