@@ -271,40 +271,44 @@ export default function LoginPage() {
             className="mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-800/50"
           >
             <div className="flex flex-col items-center mb-6">
-              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-indigo-500 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-950/30 px-2.5 py-1 rounded-full border border-indigo-100/50 dark:border-indigo-800/30 mb-3">
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-indigo-600 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-100 dark:border-indigo-500/20 mb-3">
                 <AlertTriangle className="h-3 w-3" />
                 Development Only
               </div>
-              <h3 className="text-sm font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Demo Credentials</h3>
+              <h3 className="text-sm font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">DEMO CREDENTIALS</h3>
             </div>
 
             <div className="flex flex-col gap-3">
               {[
-                { role: "Admin", email: "admin@goaltrack.com", icon: ShieldCheck },
-                { role: "Manager", email: "manager@goaltrack.com", icon: Briefcase },
-                { role: "Employee1", email: "employee1@goaltrack.com", icon: User }
+                { role: "Admin", email: "admin@ihgst.com", icon: ShieldCheck },
+                { role: "Manager", email: "manager@ihgst.com", icon: UserCog },
+                { role: "Employee1", email: "employee1@ihgst.com", icon: User }
               ].map((cred) => (
                 <button
                   key={cred.email}
                   type="button"
                   onClick={() => handleSeedLogin(cred.email)}
                   disabled={status === "loading"}
-                  className="group relative flex items-center justify-between p-4 rounded-2xl border border-slate-200/60 bg-white/50 backdrop-blur-xl shadow-sm transition-all duration-500 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/10 dark:border-slate-800/80 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-indigo-500/30 overflow-hidden"
+                  className="group relative flex items-center justify-between p-4 rounded-2xl border border-slate-200/80 bg-white/60 backdrop-blur-md shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/10 dark:border-slate-800/80 dark:bg-slate-900/60 hover:border-indigo-400 dark:hover:border-indigo-500/50 overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/0 to-indigo-500/0 group-hover:via-indigo-500/5 transition-all duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/5 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   
                   <div className="relative z-10 flex items-center gap-4">
-                    <div className="flex items-center justify-center h-10 w-10 rounded-xl border border-slate-200/50 bg-white/80 shadow-sm transition-transform duration-500 group-hover:scale-110 dark:border-slate-700/50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300">
-                      <cred.icon className="h-4 w-4" />
+                    <div className="flex items-center justify-center h-11 w-11 rounded-xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 group-hover:scale-110 dark:border-slate-700/80 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:border-indigo-200 dark:group-hover:border-indigo-500/30">
+                      <cred.icon className="h-5 w-5" />
                     </div>
                     <div className="text-left">
-                      <div className="font-bold text-sm text-slate-900 dark:text-white tracking-tight">
+                      <div className="font-bold text-sm text-slate-900 dark:text-slate-100 tracking-tight group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
                         {cred.role}
                       </div>
                       <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                         {cred.email}
                       </div>
                     </div>
+                  </div>
+                  
+                  <div className="relative z-10 flex items-center justify-center h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                   </div>
                 </button>
               ))}
