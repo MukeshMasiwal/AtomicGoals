@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShieldCheck, UserCog, Users, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -90,6 +90,41 @@ export default function LoginPage() {
     } catch {
       setStatus("error");
       setMessage("Verification failed. Please try again.");
+    }
+  }
+
+  // Development-only helper function for quick seed login
+  async function handleSeedLogin(seedEmail: string) {
+    // Production safety check
+    if (process.env.NODE_ENV !== "development") return;
+    
+    setStatus("loading");
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/auth/seed-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: seedEmail }),
+      });
+
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        user?: { email?: string; name?: string };
+      };
+
+      if (!response.ok) {
+        setStatus("error");
+        setMessage(data.error ?? "Seed login failed.");
+        return;
+      }
+
+      setStatus("success");
+      setMessage(`Welcome, ${data.user?.name || seedEmail}. Redirecting…`);
+      router.push("/dashboard");
+    } catch {
+      setStatus("error");
+      setMessage("Seed login error. Please try again.");
     }
   }
 
@@ -222,6 +257,78 @@ export default function LoginPage() {
             </Link>
           </CardFooter>
         </Card>
+
+        {/* Development-only seed login section */}
+        {process.env.NODE_ENV === "development" && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-800/50"
+          >
+            <div className="flex flex-col items-center mb-4">
+              <div className="flex items-center gap-2 text-amber-600 mb-2 bg-amber-50 dark:bg-amber-950/30 px-2.5 py-1 rounded-full text-xs font-semibold border border-amber-200/50 dark:border-amber-900/50">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                Development Only
+              </div>
+              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Quick Demo Access</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Development-only seed users</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3">
+              <button
+                type="button"
+                onClick={() => handleSeedLogin("admin@test.com")}
+                disabled={status === "loading"}
+                className="group flex items-center justify-between p-3 rounded-xl border border-indigo-100 bg-white/60 hover:bg-indigo-50/80 hover:border-indigo-300 transition-all duration-300 dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-indigo-950/30 dark:hover:border-indigo-800/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="bg-indigo-100 text-indigo-600 p-2 rounded-lg group-hover:scale-110 transition-transform duration-300 dark:bg-indigo-900/50 dark:text-indigo-400">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-semibold text-sm text-slate-700 dark:text-slate-300">Login as Admin</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-500">admin@test.com</div>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSeedLogin("manager@test.com")}
+                disabled={status === "loading"}
+                className="group flex items-center justify-between p-3 rounded-xl border border-emerald-100 bg-white/60 hover:bg-emerald-50/80 hover:border-emerald-300 transition-all duration-300 dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-emerald-950/30 dark:hover:border-emerald-800/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="bg-emerald-100 text-emerald-600 p-2 rounded-lg group-hover:scale-110 transition-transform duration-300 dark:bg-emerald-900/50 dark:text-emerald-400">
+                    <UserCog className="h-5 w-5" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-semibold text-sm text-slate-700 dark:text-slate-300">Login as Manager</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-500">manager@test.com</div>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSeedLogin("employee@test.com")}
+                disabled={status === "loading"}
+                className="group flex items-center justify-between p-3 rounded-xl border border-sky-100 bg-white/60 hover:bg-sky-50/80 hover:border-sky-300 transition-all duration-300 dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-sky-950/30 dark:hover:border-sky-800/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="bg-sky-100 text-sky-600 p-2 rounded-lg group-hover:scale-110 transition-transform duration-300 dark:bg-sky-900/50 dark:text-sky-400">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-semibold text-sm text-slate-700 dark:text-slate-300">Login as Employee</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-500">employee@test.com</div>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );
