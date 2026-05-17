@@ -1,0 +1,184 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardCheck,
+  LayoutDashboard,
+  LogOut,
+  RefreshCw,
+  Settings,
+  ShieldCheck,
+  Target,
+  Users,
+} from "lucide-react";
+
+import { cn } from "@/lib/utils";
+import type { Role } from "@/types";
+
+type NavItem = {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  roles: Role[];
+};
+
+const navItems: NavItem[] = [
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    roles: ["employee", "manager", "admin"],
+  },
+  {
+    label: "Goals",
+    href: "/dashboard/goals",
+    icon: Target,
+    roles: ["employee", "manager", "admin"],
+  },
+  {
+    label: "Quarterly Updates",
+    href: "/dashboard/updates",
+    icon: RefreshCw,
+    roles: ["employee", "manager", "admin"],
+  },
+  {
+    label: "Reviews",
+    href: "/dashboard/reviews",
+    icon: ClipboardCheck,
+    roles: ["manager", "admin"],
+  },
+  {
+    label: "Reports",
+    href: "/dashboard/reports",
+    icon: BarChart3,
+    roles: ["manager", "admin"],
+  },
+  {
+    label: "Users",
+    href: "/dashboard/users",
+    icon: Users,
+    roles: ["admin"],
+  },
+  {
+    label: "Audit Logs",
+    href: "/dashboard/audit",
+    icon: ShieldCheck,
+    roles: ["admin"],
+  },
+  {
+    label: "Settings",
+    href: "/dashboard/settings",
+    icon: Settings,
+    roles: ["employee", "manager", "admin"],
+  },
+];
+
+type SidebarProps = {
+  role: Role;
+  collapsed?: boolean;
+  onClose?: () => void;
+  onToggleCollapse?: () => void;
+};
+
+export default function Sidebar({
+  role,
+  collapsed = false,
+  onClose,
+  onToggleCollapse,
+}: SidebarProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const visibleItems = navItems.filter((item) => item.roles.includes(role));
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
+
+  return (
+    <aside
+      className={cn(
+        "flex h-screen w-64 flex-col gap-6 border-r border-slate-200/80 bg-white px-4 py-6 shadow-soft transition-all duration-300",
+        collapsed && "w-[88px] px-3"
+      )}
+    >
+      <div className="flex items-center gap-3 px-2">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-blue-600 text-sm font-bold text-white shadow-lg shadow-primary/25">
+          GT
+        </span>
+        {!collapsed ? (
+          <div>
+            <p className="text-sm font-semibold text-slate-900">GoalTrack</p>
+            <p className="text-xs text-slate-500">Performance Portal</p>
+          </div>
+        ) : null}
+      </div>
+
+      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
+        {visibleItems.map((item) => {
+          const Icon = item.icon;
+          const isActive =
+            pathname === item.href ||
+            (item.href !== "/dashboard" && pathname.startsWith(item.href));
+
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              onClick={onClose}
+              title={collapsed ? item.label : undefined}
+              className={cn(
+                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900",
+                isActive &&
+                  "bg-primary/10 text-primary shadow-sm shadow-primary/5"
+              )}
+            >
+              <Icon
+                className={cn(
+                  "h-4 w-4 shrink-0 transition-colors",
+                  isActive ? "text-primary" : "text-slate-500 group-hover:text-slate-700"
+                )}
+              />
+              {!collapsed ? <span>{item.label}</span> : null}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <button
+        type="button"
+        onClick={() => {
+          void handleLogout();
+          onClose?.();
+        }}
+        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+      >
+        <LogOut className="h-4 w-4" />
+        {!collapsed ? <span>Logout</span> : null}
+      </button>
+
+      {onToggleCollapse ? (
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="mt-2 hidden items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-100 lg:flex"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <>
+              <ChevronLeft className="h-4 w-4" />
+              <span>Collapse</span>
+            </>
+          )}
+        </button>
+      ) : null}
+    </aside>
+  );
+}
