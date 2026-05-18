@@ -52,7 +52,7 @@ export default function ProgressRing({
         y="50%"
         textAnchor="middle"
         dominantBaseline="middle"
-        className="fill-slate-900 text-2xl font-semibold"
+        className="fill-slate-900 text-2xl font-semibold dark:fill-slate-100"
       >
         {value}%
       </text>

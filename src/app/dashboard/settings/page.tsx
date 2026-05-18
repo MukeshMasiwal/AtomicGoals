@@ -195,7 +195,7 @@ export default function SettingsPage() {
                     id="department"
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:ring-offset-slate-950 dark:placeholder:text-muted-foreground dark:focus-visible:ring-slate-300"
+                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                   >
                     <option value="Engineering">Engineering</option>
                     <option value="Product">Product</option>

@@ -30,6 +30,8 @@ export async function POST(request: Request) {
       department?: string;
       otp?: string;
       otpExpiry?: Date;
+      approvalStatus?: "Pending Approval" | "Approved" | "Rejected";
+      onboardingCompleted?: boolean;
     }>();
 
     if (!user) {
@@ -44,6 +46,8 @@ export async function POST(request: Request) {
       return Response.json({ error: "OTP has expired." }, { status: 401 });
     }
 
+    console.log(`[AUTH] OTP successfully verified for ${email}`);
+
     // Clear OTP after successful verification
     await User.updateOne(
       { _id: user._id },
@@ -56,10 +60,14 @@ export async function POST(request: Request) {
       name: user.name,
       role: (user.role ?? "employee") as Role,
       department: user.department ?? "",
+      approvalStatus: user.approvalStatus ?? "Pending Approval",
+      onboardingCompleted: user.onboardingCompleted ?? false,
     };
 
     const token = await createSessionToken(sessionUser);
     await setSessionCookie(token);
+
+    console.log(`[AUTH] Session created for ${email}`);
 
     await logAudit({
       action: "user.login",
@@ -76,6 +84,8 @@ export async function POST(request: Request) {
         name: sessionUser.name,
         role: sessionUser.role,
         department: sessionUser.department,
+        approvalStatus: sessionUser.approvalStatus,
+        onboardingCompleted: sessionUser.onboardingCompleted,
       }),
     });
   } catch (error) {

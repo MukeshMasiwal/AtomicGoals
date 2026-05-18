@@ -69,6 +69,8 @@ export async function POST(request: Request) {
       name: user.name,
       role: user.role as Role,
       department: user.department ?? "",
+      approvalStatus: "Pending Approval" as const,
+      onboardingCompleted: false,
     };
 
     const token = await createSessionToken(sessionUser);
@@ -89,6 +91,8 @@ export async function POST(request: Request) {
         name: sessionUser.name,
         role: sessionUser.role,
         department: sessionUser.department,
+        approvalStatus: sessionUser.approvalStatus,
+        onboardingCompleted: sessionUser.onboardingCompleted,
       }),
     });
   } catch (error) {

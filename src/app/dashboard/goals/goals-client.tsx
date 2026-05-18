@@ -380,7 +380,7 @@ export default function GoalsClient({ user }: { user: any }) {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="h-10 rounded-md border border-border bg-card px-3 py-2 text-sm outline-none "
+                className="h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
               >
                 <option value="all">All Statuses</option>
                 <option value="not-started">Not Started</option>
@@ -395,7 +395,7 @@ export default function GoalsClient({ user }: { user: any }) {
                 <select
                   value={filterDepartment}
                   onChange={(e) => setFilterDepartment(e.target.value)}
-                  className="h-10 rounded-md border border-border bg-card px-3 py-2 text-sm outline-none "
+                  className="h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                 >
                   <option value="all">All Departments</option>
                   <option value="Engineering">Engineering</option>
@@ -408,7 +408,7 @@ export default function GoalsClient({ user }: { user: any }) {
               <select
                 value={filterManager}
                 onChange={(e) => setFilterManager(e.target.value)}
-                className="h-10 rounded-md border border-border bg-card px-3 py-2 text-sm outline-none max-w-[200px] truncate"
+                className="h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 max-w-[200px] truncate"
               >
                 <option value="all">All Managers</option>
                 {managers.map((m) => (
@@ -606,7 +606,7 @@ export default function GoalsClient({ user }: { user: any }) {
                   Assign Manager <span className="text-red-500">*</span>
                 </Label>
                 <select
-                  className="w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm outline-none "
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                   value={formData.assignedManager}
                   onChange={(e) =>
                     setFormData({
@@ -628,7 +628,7 @@ export default function GoalsClient({ user }: { user: any }) {
                   Assign Team <span className="text-red-500">*</span>
                 </Label>
                 <select
-                  className="w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm outline-none "
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                   value={formData.team}
                   onChange={(e) =>
                     setFormData({ ...formData, team: e.target.value })

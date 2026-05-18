@@ -32,7 +32,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="bg-background text-foreground antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           {children}
         </ThemeProvider>
       </body>

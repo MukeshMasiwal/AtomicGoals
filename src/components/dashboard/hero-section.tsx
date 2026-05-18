@@ -24,7 +24,7 @@ export default function HeroSection({
   subtitle,
 }: HeroSectionProps) {
   return (
-    <Card className="overflow-hidden border-0 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50 shadow-soft ring-1 ring-slate-200/60">
+    <Card className="overflow-hidden border-0 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50 shadow-soft ring-1 ring-slate-200/60 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900/50 dark:ring-slate-800">
       <CardContent className="grid gap-8 px-6 py-8 lg:grid-cols-[1.35fr_1fr]">
         <div className="space-y-5">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
@@ -33,7 +33,7 @@ export default function HeroSection({
           <h2 className="text-2xl font-semibold leading-tight text-foreground md:text-3xl">
             {headline}
           </h2>
-          <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
+          <p className="max-w-xl text-sm leading-relaxed text-muted-foreground dark:text-slate-300">
             {subtitle}
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -62,17 +62,17 @@ export default function HeroSection({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 0.45 }}
-          className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-card/60 p-6 backdrop-blur-sm"
+          className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-card/60 p-6 backdrop-blur-sm dark:bg-slate-800/40"
         >
           <ProgressRing value={progress} />
           <div className="text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground dark:text-slate-400">
               Current Quarter
             </p>
             <p className="text-lg font-semibold text-foreground">
               Q2 2026 Progress
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground dark:text-slate-300">
               {progress >= 80
                 ? "Excellent momentum — keep it up!"
                 : progress >= 60

@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Card,
   CardContent,
@@ -22,24 +23,30 @@ type Status = "idle" | "loading" | "success" | "error";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [department, setDepartment] = useState("Engineering");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
 
   async function handleSignup(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!name || !email || !password) return;
+    if (!firstName || !lastName || !jobTitle) return;
 
     setStatus("loading");
     setMessage("");
 
     try {
-      const response = await fetch("/api/auth/signup", {
+      const response = await fetch("/api/user/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          jobTitle,
+          department,
+        }),
       });
 
       const data = (await response.json().catch(() => ({}))) as {
@@ -54,8 +61,8 @@ export default function SignupPage() {
       }
 
       setStatus("success");
-      setMessage(`Welcome, ${data.user?.name || email}. Redirecting…`);
-      router.push("/dashboard");
+      setMessage("Profile submitted. Waiting for approval.");
+      router.push("/waiting-approval");
     } catch {
       setStatus("error");
       setMessage("Signup failed. Please try again.");
@@ -64,6 +71,9 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 via-white to-sky-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -97,13 +107,13 @@ export default function SignupPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="firstName">First Name</Label>
                 <Input
-                  id="name"
+                  id="firstName"
                   type="text"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Jane"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
                   required
                   className="bg-transparent"
                   disabled={status === "loading"}
@@ -111,13 +121,13 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="lastName">Last Name</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="lastName"
+                  type="text"
+                  placeholder="Doe"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
                   required
                   className="bg-transparent"
                   disabled={status === "loading"}
@@ -125,24 +135,48 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="jobTitle">Job Title</Label>
                 <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  id="jobTitle"
+                  type="text"
+                  placeholder="e.g. Product Manager"
+                  value={jobTitle}
+                  onChange={(e) => setJobTitle(e.target.value)}
                   required
-                  minLength={6}
                   className="bg-transparent"
                   disabled={status === "loading"}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="department">Department</Label>
+                <select
+                  id="department"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  disabled={status === "loading"}
+                >
+                  <option value="Engineering" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Engineering</option>
+                  <option value="Product" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Product</option>
+                  <option value="Design" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Design</option>
+                  <option value="Marketing" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Marketing</option>
+                  <option value="Sales" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Sales</option>
+                  <option value="HR" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">HR</option>
+                  <option value="Finance" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Finance</option>
+                  <option value="Operations" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Operations</option>
+                  <option value="Customer Support" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Customer Support</option>
+                  <option value="Management" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Management</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Department helps admins place you in the right team.
+                </p>
               </div>
 
               <Button
                 type="submit"
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-2"
-                disabled={status === "loading" || !name || !email || !password}
+                disabled={status === "loading" || !firstName || !lastName || !jobTitle}
               >
                 {status === "loading" ? (
                   <>
@@ -170,7 +204,7 @@ export default function SignupPage() {
               href="/"
               className="text-muted-foreground hover:text-foreground/80 dark:hover:text-slate-200"
             >
-              Back to home
+              Go to Homepage
             </Link>
           </CardFooter>
         </Card>

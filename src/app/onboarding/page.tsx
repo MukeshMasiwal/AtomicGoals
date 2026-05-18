@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -27,33 +28,6 @@ export default function OnboardingPage() {
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
 
-  const [managers, setManagers] = useState<
-    { _id: string; name: string; department: string }[]
-  >([]);
-  const [teams, setTeams] = useState<
-    { _id: string; name: string; department: string }[]
-  >([]);
-  const [selectedManager, setSelectedManager] = useState("");
-  const [selectedTeam, setSelectedTeam] = useState("");
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await fetch("/api/onboarding/data");
-        if (res.ok) {
-          const data = await res.json();
-          setManagers(data.managers || []);
-          setTeams(data.teams || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch onboarding data", error);
-      }
-    }
-    fetchData();
-  }, []);
-
-  const availableTeams = teams.filter((t) => t.department === department);
-
   async function handleOnboarding(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!firstName || !lastName || !jobTitle) return;
@@ -70,8 +44,6 @@ export default function OnboardingPage() {
           lastName,
           jobTitle,
           department,
-          manager: selectedManager,
-          team: selectedTeam,
         }),
       });
 
@@ -84,10 +56,10 @@ export default function OnboardingPage() {
       }
 
       setStatus("success");
-      setMessage("Profile setup complete! Redirecting to dashboard...");
+      setMessage("Profile setup complete! Redirecting...");
 
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push("/waiting-approval");
         router.refresh();
       }, 1500);
     } catch {
@@ -177,66 +149,21 @@ export default function OnboardingPage() {
                   value={department}
                   onChange={(e) => {
                     setDepartment(e.target.value);
-                    setSelectedTeam("");
                   }}
-                  className="flex h-10 w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:ring-offset-slate-950 dark:placeholder:text-muted-foreground dark:focus-visible:ring-slate-300"
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                   disabled={status === "loading" || status === "success"}
                 >
-                  <option value="Engineering">Engineering</option>
-                  <option value="Product">Product</option>
-                  <option value="Design">Design</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Sales">Sales</option>
-                  <option value="HR">HR</option>
-                  <option value="Finance">Finance</option>
-                  <option value="Operations">Operations</option>
-                  <option value="Customer Support">Customer Support</option>
-                  <option value="Management">Management</option>
+                  <option value="Engineering" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Engineering</option>
+                  <option value="Product" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Product</option>
+                  <option value="Design" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Design</option>
+                  <option value="Marketing" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Marketing</option>
+                  <option value="Sales" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Sales</option>
+                  <option value="HR" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">HR</option>
+                  <option value="Finance" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Finance</option>
+                  <option value="Operations" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Operations</option>
+                  <option value="Customer Support" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Customer Support</option>
+                  <option value="Management" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">Management</option>
                 </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="manager">Manager</Label>
-                  <select
-                    id="manager"
-                    value={selectedManager}
-                    onChange={(e) => setSelectedManager(e.target.value)}
-                    required
-                    className="flex h-10 w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300"
-                    disabled={status === "loading" || status === "success"}
-                  >
-                    <option value="" disabled>
-                      Select Manager
-                    </option>
-                    {managers.map((m) => (
-                      <option key={m._id} value={m._id}>
-                        {m.name} ({m.department})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="team">Team</Label>
-                  <select
-                    id="team"
-                    value={selectedTeam}
-                    onChange={(e) => setSelectedTeam(e.target.value)}
-                    required
-                    className="flex h-10 w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300"
-                    disabled={status === "loading" || status === "success"}
-                  >
-                    <option value="" disabled>
-                      Select Team
-                    </option>
-                    {availableTeams.map((t) => (
-                      <option key={t._id} value={t._id}>
-                        {t.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
               <Button
@@ -247,9 +174,7 @@ export default function OnboardingPage() {
                   status === "success" ||
                   !firstName ||
                   !lastName ||
-                  !jobTitle ||
-                  !selectedManager ||
-                  !selectedTeam
+                  !jobTitle
                 }
               >
                 {status === "loading" ? (
@@ -262,6 +187,14 @@ export default function OnboardingPage() {
                 )}
               </Button>
             </form>
+            <div className="mt-6 text-center text-sm text-muted-foreground">
+              <Link
+                href="/"
+                className="text-indigo-600 hover:underline dark:text-indigo-400"
+              >
+                Go to Homepage
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </motion.div>

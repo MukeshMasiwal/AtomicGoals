@@ -34,13 +34,13 @@ async function getSessionPayload(token: string) {
       token,
       new TextEncoder().encode(secret),
     );
-    return payload as { role?: string };
+    return payload as { role?: string; approvalStatus?: string; onboardingCompleted?: boolean };
   } catch {
     return null;
   }
 }
 
-export async function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip static assets
@@ -56,14 +56,68 @@ export async function proxy(request: NextRequest) {
   const session = token ? await getSessionPayload(token) : null;
   const isAuthenticated = !!session;
 
+  console.log(`[Middleware] Path: ${pathname}, Auth: ${isAuthenticated}, Session:`, session);
+
   const isPublic = isPublicPath(pathname);
 
-  // If user is authenticated and trying to access login/signup, redirect to dashboard
-  if (
-    isAuthenticated &&
-    (pathname === "/login" || pathname === "/signup" || pathname === "/")
-  ) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  const isOnboarding = pathname === "/onboarding";
+  const isWaiting = pathname === "/waiting-approval";
+  const isRejectedRoute = pathname === "/rejected";
+  const isLogout = pathname === "/api/auth/logout" || pathname === "/logout";
+
+  if (isAuthenticated && !isLogout) {
+    const isApproved = session.approvalStatus === "Approved";
+    const isPending = session.approvalStatus === "Pending Approval";
+    const isRejected = session.approvalStatus === "Rejected";
+    const hasCompletedOnboarding = session.onboardingCompleted;
+
+    // Allow API requests to go through
+    if (!pathname.startsWith("/api/")) {
+      if (!hasCompletedOnboarding && !isOnboarding && pathname !== "/signup" && pathname !== "/") {
+        console.log(`[Middleware] Redirecting to /onboarding (Incomplete Onboarding)`);
+        return NextResponse.redirect(new URL("/onboarding", request.url));
+      }
+      
+      if (hasCompletedOnboarding && isPending && !isWaiting && pathname !== "/") {
+        console.log(`[Middleware] Redirecting to /waiting-approval (Pending)`);
+        return NextResponse.redirect(new URL("/waiting-approval", request.url));
+      }
+      
+      if (hasCompletedOnboarding && isRejected && !isRejectedRoute && pathname !== "/") {
+        console.log(`[Middleware] Redirecting to /rejected (Rejected)`);
+        return NextResponse.redirect(new URL("/rejected", request.url));
+      }
+
+      if (isApproved && (isOnboarding || isWaiting || isRejectedRoute || pathname === "/signup")) {
+        console.log(`[Middleware] Redirecting to /dashboard (Approved)`);
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
+    }
+
+    // If user is authenticated and trying to access login/signup
+    if (pathname === "/login" || pathname === "/signup") {
+      if (!hasCompletedOnboarding) {
+        console.log(`[Middleware] Redirecting from ${pathname} to /onboarding`);
+        return NextResponse.redirect(new URL("/onboarding", request.url));
+      }
+      if (isPending) {
+        console.log(`[Middleware] Redirecting from ${pathname} to /waiting-approval`);
+        return NextResponse.redirect(new URL("/waiting-approval", request.url));
+      }
+      if (isRejected) {
+        console.log(`[Middleware] Redirecting from ${pathname} to /rejected`);
+        return NextResponse.redirect(new URL("/rejected", request.url));
+      }
+      console.log(`[Middleware] Redirecting from ${pathname} to /dashboard`);
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    if (pathname === "/") {
+      if (isApproved) {
+        console.log(`[Middleware] Redirecting from / to /dashboard`);
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
+    }
   }
 
   // Allow access to public paths if not authenticated

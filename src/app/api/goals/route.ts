@@ -147,36 +147,26 @@ export async function POST(req: Request) {
     const creatorUser = await User.findById(session.id);
     const creatorDept = creatorUser?.department || "No Department";
 
-    const newNotif = {
+    const { createNotification, notifyAdmins } = await import("@/lib/notifications");
+
+    const newNotifBase = {
       title: "New Task Created",
       message: `New task "${title}" [Priority: ${priority}] created by ${session.name} (${creatorDept}).`,
-      type: "task_approval",
-      read: false,
-      createdAt: new Date(),
+      type: "Goal Created" as any, // mapping to Goal Created
       link: "/dashboard/goals",
+      relatedGoal: goal._id.toString(),
     };
 
     // Notify the assigned manager
-    if (assignedManager !== session.id) {
-      await User.updateOne(
-        { _id: assignedManager },
-        {
-          $push: {
-            notifications: { $each: [newNotif], $position: 0, $slice: 50 },
-          },
-        },
-      );
+    if (assignedManager && assignedManager !== session.id) {
+      await createNotification({
+        ...newNotifBase,
+        recipient: assignedManager,
+      });
     }
 
     // Notify all admins
-    await User.updateMany(
-      { role: "admin", _id: { $ne: session.id } },
-      {
-        $push: {
-          notifications: { $each: [newNotif], $position: 0, $slice: 50 },
-        },
-      },
-    );
+    await notifyAdmins(newNotifBase);
 
     // Notify Assigned Users if they are not the creator
     if (assignedTo && assignedTo.length > 0) {
@@ -184,26 +174,16 @@ export async function POST(req: Request) {
         (id: string) => id !== session.id,
       );
       if (assigneesToNotify.length > 0) {
-        const assignedNotif = {
-          title: "New Task Assigned",
-          message: `You have been assigned to task "${title}" by ${session.name}.`,
-          type: "task_assignment",
-          read: false,
-          createdAt: new Date(),
-          link: "/dashboard/goals",
-        };
-        await User.updateMany(
-          { _id: { $in: assigneesToNotify } },
-          {
-            $push: {
-              notifications: {
-                $each: [assignedNotif],
-                $position: 0,
-                $slice: 50,
-              },
-            },
-          },
-        );
+        for (const assignee of assigneesToNotify) {
+          await createNotification({
+            title: "New Task Assigned",
+            message: `You have been assigned to task "${title}" by ${session.name}.`,
+            type: "Goal Created" as any,
+            recipient: assignee,
+            link: "/dashboard/goals",
+            relatedGoal: goal._id.toString(),
+          });
+        }
       }
     }
 

@@ -6,6 +6,8 @@ export type SessionUser = {
   name: string;
   role: Role;
   department: string;
+  approvalStatus: "Pending Approval" | "Approved" | "Rejected";
+  onboardingCompleted?: boolean;
 };
 
 export type GoalStatus = "draft" | "pending" | "approved" | "rejected";

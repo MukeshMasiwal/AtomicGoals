@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Card,
   CardContent,
@@ -163,6 +164,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 via-white to-sky-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -332,7 +336,7 @@ export default function LoginPage() {
               href="/"
               className="text-muted-foreground hover:text-foreground/80 dark:hover:text-slate-200"
             >
-              Back to home
+              Go to Homepage
             </Link>
           </CardFooter>
         </Card>

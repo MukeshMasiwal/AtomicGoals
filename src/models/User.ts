@@ -22,17 +22,8 @@ const userSchema = new Schema(
     department: { type: String, default: "", trim: true },
     team: { type: Schema.Types.ObjectId, ref: "Team" },
     manager: { type: Schema.Types.ObjectId, ref: "User" },
+    assignedManager: { type: Schema.Types.ObjectId, ref: "User" },
     avatar: { type: String, default: "" },
-    notifications: [
-      {
-        title: { type: String, required: true },
-        message: { type: String, required: true },
-        read: { type: Boolean, default: false },
-        createdAt: { type: Date, default: Date.now },
-        type: { type: String },
-        link: { type: String },
-      },
-    ],
     onboardingCompleted: { type: Boolean, default: false },
     verified: { type: Boolean, default: false },
     employeeStatus: {
@@ -40,6 +31,13 @@ const userSchema = new Schema(
       enum: ["Active", "On Leave"],
       default: "Active",
     },
+    approvalStatus: {
+      type: String,
+      enum: ["Pending Approval", "Approved", "Rejected"],
+      default: "Pending Approval",
+    },
+    approvedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    approvalDate: { type: Date },
     isSeedUser: { type: Boolean, default: false },
     password: { type: String, select: false },
     otp: { type: String, select: false },

@@ -2,7 +2,9 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import TeamClient from "./team-client";
+import { Loader2 } from "lucide-react";
 
 export default async function TeamPage() {
   const session = await getSessionFromCookies();
@@ -15,6 +17,7 @@ export default async function TeamPage() {
   const dbUser = (await User.findById(session.id).lean()) as any;
 
   const user = {
+    id: session.id,
     name: dbUser?.name || session.name,
     avatar: dbUser?.avatar || "",
     role: session.role,
@@ -27,5 +30,9 @@ export default async function TeamPage() {
     team: String(dbUser?.team || ""),
   };
 
-  return <TeamClient user={user} />;
+  return (
+    <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="animate-spin text-indigo-600" /></div>}>
+      <TeamClient user={user} />
+    </Suspense>
+  );
 }

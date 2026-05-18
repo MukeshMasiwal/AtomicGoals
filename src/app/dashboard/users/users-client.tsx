@@ -141,7 +141,7 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
             <select
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="flex h-10 w-full sm:w-48 rounded-md border border-border bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+              className="flex h-10 w-full sm:w-48 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             >
               <option value="All">All Departments</option>
               <option value="Engineering">Engineering</option>
@@ -236,7 +236,7 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
                             handleRoleChange(u.id, e.target.value)
                           }
                           disabled={u.id === sessionUser.id}
-                          className="text-sm rounded border border-border bg-card px-2 py-1 focus:ring-2 focus:ring-indigo-500"
+                          className="text-sm rounded border border-slate-200 bg-white px-2 py-1 text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                         >
                           <option value="employee">Employee</option>
                           <option value="manager">Manager</option>
@@ -266,7 +266,7 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
                               );
                             }
                           }}
-                          className="text-sm rounded border border-border bg-card px-2 py-1 focus:ring-2 focus:ring-indigo-500 w-full"
+                          className="text-sm rounded border border-slate-200 bg-white px-2 py-1 text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                         >
                           <option value="">No Team</option>
                           {teams.map((t) => (
@@ -280,13 +280,15 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
                         <div className="flex flex-col gap-2">
                           <Badge
                             className={
-                              u.accountStatus === "Active"
-                                ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
-                                : "bg-amber-100 text-amber-700 hover:bg-amber-100"
+                              u.approvalStatus === "Pending Approval"
+                                ? "bg-amber-100 text-amber-700 border-amber-200"
+                                : u.accountStatus === "Active"
+                                  ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                                  : "bg-slate-100 text-slate-700 hover:bg-slate-100"
                             }
                             variant={null}
                           >
-                            {u.accountStatus}
+                            {u.approvalStatus === "Pending Approval" ? "Pending Approval" : u.accountStatus}
                           </Badge>
                           <select
                             value={u.status}
@@ -309,7 +311,7 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
                                 );
                               }
                             }}
-                            className="text-xs rounded border border-border bg-card px-2 py-1 focus:ring-2 focus:ring-indigo-500 w-full"
+                            className="text-xs rounded border border-slate-200 bg-white px-2 py-1 text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                           >
                             <option value="Active">Active</option>
                             <option value="On Leave">On Leave</option>
@@ -338,7 +340,7 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
                               );
                             }
                           }}
-                          className="text-sm rounded border border-border bg-card px-2 py-1 focus:ring-2 focus:ring-indigo-500 w-full"
+                          className="text-sm rounded border border-slate-200 bg-white px-2 py-1 text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                         >
                           <option value="">No Manager</option>
                           {users

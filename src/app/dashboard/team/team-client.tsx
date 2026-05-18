@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import DashboardShell from "@/components/layout/dashboard-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,108 @@ export default function TeamClient({ user }: { user: any }) {
 
   const [newTeamName, setNewTeamName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const maxTeamMembers = 8;
+  const [selectedManagerId, setSelectedManagerId] = useState("");
+  
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const approvalUserId = searchParams.get("approvalUser");
+  
+  const [approvalUser, setApprovalUser] = useState<any>(null);
+  const [approvalLoading, setApprovalLoading] = useState(false);
+  const [approvalTeamId, setApprovalTeamId] = useState("");
+  const [approvalManagerId, setApprovalManagerId] = useState("");
+
+  const managedTeam = teams.find(
+    (t) => String((t.manager as any)?._id || t.manager) === user.id,
+  );
+  const teamIdForView =
+    user.team || (managedTeam?._id ? String(managedTeam._id) : "");
+  const currentTeam = teams.find((t) => String(t._id) === teamIdForView);
+  const currentTeamCount = currentTeam
+    ? (currentTeam.members?.length || 0) + (currentTeam.manager ? 1 : 0)
+    : 0;
+  const isManagerAddMembers = user.role === "manager" && !!managedTeam;
+  const managerIdForCreate = user.role === "admin" ? selectedManagerId : user.id;
+  const normalizedSelectedMembers = selectedMembers.filter(
+    (id) => id !== managerIdForCreate,
+  );
+  const selectedCount =
+    normalizedSelectedMembers.length + (managerIdForCreate ? 1 : 0);
+  const limitReached = selectedCount >= maxTeamMembers;
+  const approvalTeam = teams.find((t) => String(t._id) === approvalTeamId);
+  const approvalTeamCount = approvalTeam
+    ? (approvalTeam.members?.length || 0) + (approvalTeam.manager ? 1 : 0)
+    : 0;
+  const approvalUserTeamId = approvalUser?.team
+    ? String(approvalUser.team)
+    : "";
+  const approvalLimitReached = approvalTeamId
+    ? approvalTeamCount >= maxTeamMembers && approvalUserTeamId !== approvalTeamId
+    : false;
+  const approvalReady =
+    user.role === "admin"
+      ? !!approvalTeamId && !!approvalManagerId && !approvalLimitReached
+      : !approvalLimitReached;
+
+  useEffect(() => {
+    if (approvalUserId && users.length > 0) {
+      const userToApprove = users.find((u) => u.id === approvalUserId);
+      if (userToApprove) {
+        setApprovalUser(userToApprove);
+      } else {
+        // If not in standard users list (maybe pending users are filtered?), fetch individually
+        fetch(`/api/users/${approvalUserId}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.user) setApprovalUser(data.user);
+          })
+          .catch(console.error);
+      }
+    }
+  }, [approvalUserId, users]);
+
+  const handleApprovalAction = async (action: "approve" | "reject") => {
+    if (!approvalUser) return;
+    setApprovalLoading(true);
+    try {
+      const res = await fetch(`/api/users/${approvalUser.id || approvalUser._id}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          teamId: approvalTeamId,
+          managerId: approvalManagerId,
+        }),
+      });
+      if (res.ok) {
+        // Refresh users + teams
+        const [usersRes, teamsRes] = await Promise.all([
+          fetch("/api/users"),
+          fetch("/api/teams"),
+        ]);
+        if (usersRes.ok) {
+          const updatedUsers = await usersRes.json();
+          if (updatedUsers.users) setUsers(updatedUsers.users);
+        }
+        if (teamsRes.ok) {
+          const updatedTeams = await teamsRes.json();
+          if (updatedTeams.teams) setTeams(updatedTeams.teams);
+        }
+        setApprovalUser(null);
+        router.replace("/dashboard/team");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        if (data?.error) {
+          alert(data.error);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setApprovalLoading(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -66,9 +169,60 @@ export default function TeamClient({ user }: { user: any }) {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (!isModalOpen) return;
+    if (user.role === "admin") {
+      const defaultManager = users.find(
+        (u) => u.role === "manager" || u.role === "admin",
+      );
+      if (defaultManager) setSelectedManagerId(defaultManager.id);
+      setNewTeamName("");
+    } else {
+      setSelectedManagerId(user.id);
+      if (managedTeam?.name) {
+        setNewTeamName(managedTeam.name);
+      }
+    }
+  }, [isModalOpen, user.role, users, user.id, managedTeam]);
+
+  useEffect(() => {
+    if (!approvalUser) return;
+
+    if (user.role === "admin") {
+      const deptTeam = teams.find(
+        (t) => t.department && t.department === approvalUser.department,
+      );
+      const fallbackTeam = teams[0];
+      const teamToUse = deptTeam || fallbackTeam;
+      setApprovalTeamId(teamToUse?._id ? String(teamToUse._id) : "");
+
+      const managerOptions = users.filter(
+        (u) => u.role === "manager" || u.role === "admin",
+      );
+      const deptManager = managerOptions.find(
+        (u) => u.department && u.department === approvalUser.department,
+      );
+      const managerToUse = deptManager || managerOptions[0];
+      setApprovalManagerId(managerToUse?.id || "");
+      return;
+    }
+
+    if (user.role === "manager") {
+      if (managedTeam?._id) {
+        setApprovalTeamId(String(managedTeam._id));
+      }
+      setApprovalManagerId(user.id);
+    }
+  }, [approvalUser, user.role, teams, users, managedTeam, user.id]);
+
   const filteredUsers = users.filter((u) => {
-    if (user.role === "employee" && u.team !== user.team) {
-      return false; // Employees only see their own team
+    if (user.role !== "admin") {
+      if (!teamIdForView) {
+        return u.id === user.id;
+      }
+      if (u.team !== teamIdForView && u.id !== user.id) {
+        return false;
+      }
     }
     if (!search) return true;
     const s = search.toLowerCase();
@@ -82,24 +236,63 @@ export default function TeamClient({ user }: { user: any }) {
   const handleCreateTeam = async () => {
     setSaving(true);
     try {
-      const res = await fetch("/api/teams", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newTeamName, members: selectedMembers }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setTeams([...teams, data.team]);
-        // Also update local users state to reflect team assignment
-        setUsers(
-          users.map((u) =>
-            selectedMembers.includes(u.id) ? { ...u, team: data.team._id } : u,
+      if (limitReached) {
+        alert("Team limit reached (8/8 members).");
+        return;
+      }
+
+      if (isManagerAddMembers && managedTeam?._id) {
+        const memberIds = normalizedSelectedMembers;
+        const responses = await Promise.all(
+          memberIds.map((memberId) =>
+            fetch(`/api/users/${memberId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ team: managedTeam._id }),
+            }),
           ),
         );
-        setIsModalOpen(false);
-        setNewTeamName("");
-        setSelectedMembers([]);
+
+        const failed = responses.find((r) => !r.ok);
+        if (failed) {
+          const data = await failed.json().catch(() => ({}));
+          if (data?.error) alert(data.error);
+          return;
+        }
+      } else {
+        const res = await fetch("/api/teams", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: newTeamName,
+            members: normalizedSelectedMembers,
+            managerId: managerIdForCreate,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          if (data?.error) alert(data.error);
+          return;
+        }
       }
+
+      const [usersRes, teamsRes] = await Promise.all([
+        fetch("/api/users"),
+        fetch("/api/teams"),
+      ]);
+      if (usersRes.ok) {
+        const data = await usersRes.json();
+        setUsers(data.users || []);
+      }
+      if (teamsRes.ok) {
+        const data = await teamsRes.json();
+        setTeams(data.teams || []);
+      }
+
+      setIsModalOpen(false);
+      setNewTeamName("");
+      setSelectedMembers([]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -153,6 +346,14 @@ export default function TeamClient({ user }: { user: any }) {
             <p className="text-muted-foreground dark:text-muted-foreground text-sm mt-1">
               View and manage your organization's team members.
             </p>
+            {user.role !== "admin" && teamIdForView && (
+              <p className="mt-2 text-xs font-semibold text-muted-foreground">
+                Team members: {currentTeamCount}/{maxTeamMembers}
+                {currentTeamCount >= maxTeamMembers
+                  ? " (Team limit reached)"
+                  : ""}
+              </p>
+            )}
           </div>
           <div className="flex w-full sm:w-auto gap-3">
             <Button
@@ -271,13 +472,15 @@ export default function TeamClient({ user }: { user: any }) {
                       <TableCell>
                         <Badge
                           className={
-                            member.status === "Active"
-                              ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
-                              : "bg-amber-100 text-amber-700 hover:bg-amber-100"
+                            member.approvalStatus === "Pending Approval"
+                              ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400"
+                              : member.status === "Active"
+                                ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                : "bg-slate-100 text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400"
                           }
                           variant={null}
                         >
-                          {member.status}
+                          {member.approvalStatus === "Pending Approval" ? "Pending Approval" : member.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -302,6 +505,14 @@ export default function TeamClient({ user }: { user: any }) {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                {member.approvalStatus === "Pending Approval" && (
+                                  <DropdownMenuItem
+                                    className="text-emerald-600 cursor-pointer"
+                                    onClick={() => setApprovalUser(member)}
+                                  >
+                                    Review & Approve
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem
                                   className="text-red-600 cursor-pointer"
                                   onClick={() =>
@@ -329,24 +540,59 @@ export default function TeamClient({ user }: { user: any }) {
           <div className="bg-card p-6 rounded-xl shadow-xl w-full max-w-md border border-border animate-in zoom-in-95 duration-200">
             <div className="mb-4">
               <h3 className="text-lg font-semibold tracking-tight text-foreground ">
-                Create New Team
+                {isManagerAddMembers
+                  ? `Add Members to ${managedTeam?.name || "Team"}`
+                  : "Create New Team"}
               </h3>
             </div>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Team Name</Label>
-                <Input
-                  value={newTeamName}
-                  onChange={(e) => setNewTeamName(e.target.value)}
-                  placeholder="e.g. Marketing Pod A"
-                  className="bg-muted/50 "
-                />
-              </div>
+              {!isManagerAddMembers && (
+                <div className="space-y-2">
+                  <Label>Team Name</Label>
+                  <Input
+                    value={newTeamName}
+                    onChange={(e) => setNewTeamName(e.target.value)}
+                    placeholder="e.g. Marketing Pod A"
+                    className="bg-muted/50 "
+                  />
+                </div>
+              )}
+
+              {user.role === "admin" && (
+                <div className="space-y-2">
+                  <Label>Assign Manager</Label>
+                  <select
+                    value={selectedManagerId}
+                    onChange={(e) => setSelectedManagerId(e.target.value)}
+                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  >
+                    <option value="" disabled>
+                      Select manager
+                    </option>
+                    {users
+                      .filter(
+                        (u) => u.role === "manager" || u.role === "admin",
+                      )
+                      .map((u) => (
+                        <option
+                          key={u.id}
+                          value={u.id}
+                          className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100"
+                        >
+                          {u.name} ({u.role})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Select Members</Label>
                 <div className="max-h-48 overflow-y-auto border border-border rounded-md p-2 bg-muted/50 ">
                   {users
-                    .filter((u) => u.role !== "admin")
+                    .filter(
+                      (u) =>
+                        u.role !== "admin" && u.id !== selectedManagerId,
+                    )
                     .map((u) => (
                       <label
                         key={u.id}
@@ -355,6 +601,9 @@ export default function TeamClient({ user }: { user: any }) {
                         <input
                           type="checkbox"
                           checked={selectedMembers.includes(u.id)}
+                          disabled={
+                            limitReached && !selectedMembers.includes(u.id)
+                          }
                           onChange={(e) => {
                             if (e.target.checked)
                               setSelectedMembers([...selectedMembers, u.id]);
@@ -370,6 +619,13 @@ export default function TeamClient({ user }: { user: any }) {
                       </label>
                     ))}
                 </div>
+                <p
+                  className={`text-xs ${limitReached ? "text-amber-600 dark:text-amber-500" : "text-muted-foreground"}`}
+                >
+                  {limitReached
+                    ? `Team limit reached (${selectedCount}/${maxTeamMembers} members)`
+                    : `Selected ${selectedCount}/${maxTeamMembers} members`}
+                </p>
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100 ">
@@ -378,16 +634,166 @@ export default function TeamClient({ user }: { user: any }) {
               </Button>
               <Button
                 onClick={handleCreateTeam}
-                disabled={!newTeamName || saving}
+                disabled={
+                  saving ||
+                  limitReached ||
+                  (isManagerAddMembers
+                    ? normalizedSelectedMembers.length === 0
+                    : !newTeamName ||
+                      (user.role === "admin" && !selectedManagerId))
+                }
                 className="bg-indigo-600 hover:bg-indigo-700 text-white"
               >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Create"
+                  isManagerAddMembers ? "Add Members" : "Create"
                 )}
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approval Modal */}
+      {approvalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-card p-6 rounded-xl shadow-xl w-full max-w-md border border-border animate-in zoom-in-95 duration-200">
+            <div className="mb-4 text-center">
+              <div className="mx-auto w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-4">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-indigo-200 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300">
+                    {approvalUser.name?.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <h3 className="text-xl font-bold tracking-tight text-foreground ">
+                Approve New Employee
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Review the application details below.
+              </p>
+            </div>
+            
+            <div className="space-y-4 bg-muted/30 p-4 rounded-lg mb-6 border border-border/50">
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <span className="text-muted-foreground font-medium">Name:</span>
+                <span className="col-span-2 font-medium text-foreground">{approvalUser.name}</span>
+                
+                <span className="text-muted-foreground font-medium">Email:</span>
+                <span className="col-span-2 text-foreground">{approvalUser.email}</span>
+                
+                <span className="text-muted-foreground font-medium">Role:</span>
+                <span className="col-span-2 capitalize text-foreground">{approvalUser.role}</span>
+                
+                <span className="text-muted-foreground font-medium">Department:</span>
+                <span className="col-span-2 text-foreground">{approvalUser.department || "N/A"}</span>
+                
+                <span className="text-muted-foreground font-medium">Status:</span>
+                <span className="col-span-2">
+                  <Badge variant={null} className="border text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400">
+                    {approvalUser.approvalStatus || "Pending Approval"}
+                  </Badge>
+                </span>
+              </div>
+            </div>
+
+            {user.role === "admin" && (
+              <div className="space-y-3 mb-6">
+                <div className="space-y-2">
+                  <Label>Assign Team</Label>
+                  <select
+                    value={approvalTeamId}
+                    onChange={(e) => setApprovalTeamId(e.target.value)}
+                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  >
+                    <option value="" disabled>
+                      Select team
+                    </option>
+                    {teams.map((t) => (
+                      <option
+                        key={t._id}
+                        value={t._id}
+                        className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Reporting Manager</Label>
+                  <select
+                    value={approvalManagerId}
+                    onChange={(e) => setApprovalManagerId(e.target.value)}
+                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  >
+                    <option value="" disabled>
+                      Select manager
+                    </option>
+                    {users
+                      .filter(
+                        (u) => u.role === "manager" || u.role === "admin",
+                      )
+                      .map((u) => (
+                        <option
+                          key={u.id}
+                          value={u.id}
+                          className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100"
+                        >
+                          {u.name} ({u.role})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <p
+                  className={`text-xs ${approvalLimitReached ? "text-amber-600 dark:text-amber-500" : "text-muted-foreground"}`}
+                >
+                  {approvalTeamId
+                    ? `Team members: ${approvalTeamCount}/${maxTeamMembers}`
+                    : "Select a team to see member count."}
+                  {approvalLimitReached ? " (Team limit reached)" : ""}
+                </p>
+              </div>
+            )}
+
+            {user.role === "manager" && managedTeam && (
+              <div className="mb-6 text-xs text-muted-foreground">
+                Assigning to {managedTeam.name} (managed by you).
+              </div>
+            )}
+
+            <div className="flex justify-center gap-3">
+              <Button
+                variant="outline"
+                className="w-40 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/30 dark:hover:bg-red-900/20"
+                onClick={() => handleApprovalAction("reject")}
+                disabled={approvalLoading}
+              >
+                Reject
+              </Button>
+              <Button
+                className="w-40 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
+                onClick={() => handleApprovalAction("approve")}
+                disabled={approvalLoading || !approvalReady}
+              >
+                {approvalLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Approve Access"
+                )}
+              </Button>
+            </div>
+            
+            <button 
+              onClick={() => {
+                setApprovalUser(null);
+                router.replace("/dashboard/team");
+              }}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}

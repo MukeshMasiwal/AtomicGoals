@@ -26,6 +26,7 @@ async function seed() {
         role: "admin",
         verified: true,
         isSeedUser: true,
+        approvalStatus: "Approved",
       });
       console.log("Admin user created");
     }
@@ -34,12 +35,14 @@ async function seed() {
     const managersData = [
       { email: "alice.eng@atomicgoals.com", name: "Alice Engineer", role: "manager", department: "Engineering", jobTitle: "VP of Engineering" },
       { email: "bob.mkt@atomicgoals.com", name: "Bob Marketer", role: "manager", department: "Marketing", jobTitle: "CMO" },
+      { email: "sarah.sales@atomicgoals.com", name: "Sarah Sales", role: "manager", department: "Sales", jobTitle: "VP of Sales" },
+      { email: "hannah.hr@atomicgoals.com", name: "Hannah HR", role: "manager", department: "HR", jobTitle: "VP of HR" },
     ];
 
     const managers = [];
     for (const data of managersData) {
       let m = await User.findOne({ email: data.email });
-      if (!m) m = await User.create({ ...data, verified: true, isSeedUser: true, onboardingCompleted: true });
+      if (!m) m = await User.create({ ...data, verified: true, isSeedUser: true, onboardingCompleted: true, approvalStatus: "Approved" });
       managers.push(m);
     }
     console.log("Managers seeded");
@@ -49,6 +52,8 @@ async function seed() {
       { name: "Frontend Team", department: "Engineering", managerEmail: "alice.eng@atomicgoals.com" },
       { name: "Growth Team", department: "Marketing", managerEmail: "bob.mkt@atomicgoals.com" },
       { name: "Brand Team", department: "Marketing", managerEmail: "bob.mkt@atomicgoals.com" },
+      { name: "Enterprise Sales", department: "Sales", managerEmail: "sarah.sales@atomicgoals.com" },
+      { name: "People Ops", department: "HR", managerEmail: "hannah.hr@atomicgoals.com" },
     ];
 
     const teams = [];
@@ -78,6 +83,8 @@ async function seed() {
       { email: "eve.mkt@atomicgoals.com", name: "Eve SEO", department: "Marketing", teamName: "Growth Team", managerEmail: "bob.mkt@atomicgoals.com", jobTitle: "SEO Specialist" },
       { email: "frank.mkt@atomicgoals.com", name: "Frank Ads", department: "Marketing", teamName: "Growth Team", managerEmail: "bob.mkt@atomicgoals.com", jobTitle: "Ads Manager" },
       { email: "grace.mkt@atomicgoals.com", name: "Grace Design", department: "Marketing", teamName: "Brand Team", managerEmail: "bob.mkt@atomicgoals.com", jobTitle: "UI Designer" },
+      { email: "sam.sales@atomicgoals.com", name: "Sam Representative", department: "Sales", teamName: "Enterprise Sales", managerEmail: "sarah.sales@atomicgoals.com", jobTitle: "Account Executive" },
+      { email: "harry.hr@atomicgoals.com", name: "Harry Human", department: "HR", teamName: "People Ops", managerEmail: "hannah.hr@atomicgoals.com", jobTitle: "HR Generalist" },
     ];
 
     const employees = [];
@@ -97,6 +104,7 @@ async function seed() {
           verified: true,
           isSeedUser: true,
           onboardingCompleted: true,
+          approvalStatus: "Approved",
         });
       }
       employees.push(e);
@@ -140,6 +148,41 @@ async function seed() {
         approvalStatus: "Approved",
         status: "in-progress",
         progress: 50,
+        quarterlyTarget: "Q3 2026",
+      });
+
+      const sarah = managers.find(m => m.email === "sarah.sales@atomicgoals.com");
+      const hannah = managers.find(m => m.email === "hannah.hr@atomicgoals.com");
+      const sam = employees.find(e => e.email === "sam.sales@atomicgoals.com");
+      const harry = employees.find(e => e.email === "harry.hr@atomicgoals.com");
+      
+      await Goal.create({
+        title: "Seed Goal: Close 5 Enterprise Deals",
+        description: "Focus on Fortune 500 companies in Q3.",
+        creator: sarah._id,
+        assignedTo: [sam._id],
+        team: teams.find(t => t.name === "Enterprise Sales")._id,
+        assignedManager: sarah._id,
+        department: "Sales",
+        dueDate: futureDate,
+        approvalStatus: "Approved",
+        status: "in-progress",
+        progress: 20,
+        quarterlyTarget: "Q3 2026",
+      });
+
+      await Goal.create({
+        title: "Seed Goal: Launch New Employee Handbook",
+        description: "Draft and publish the remote work guidelines.",
+        creator: hannah._id,
+        assignedTo: [harry._id],
+        team: teams.find(t => t.name === "People Ops")._id,
+        assignedManager: hannah._id,
+        department: "HR",
+        dueDate: futureDate,
+        approvalStatus: "Approved",
+        status: "completed",
+        progress: 100,
         quarterlyTarget: "Q3 2026",
       });
       

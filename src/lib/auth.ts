@@ -13,6 +13,8 @@ export type SessionPayload = {
   name: string;
   role: Role;
   department: string;
+  approvalStatus: "Pending Approval" | "Approved" | "Rejected";
+  onboardingCompleted?: boolean;
 };
 
 function getJwtSecret(): Uint8Array {
@@ -40,6 +42,8 @@ export async function createSessionToken(user: SessionUser): Promise<string> {
     name: user.name,
     role: user.role,
     department: user.department,
+    approvalStatus: user.approvalStatus,
+    onboardingCompleted: user.onboardingCompleted,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
@@ -58,6 +62,8 @@ export async function verifySessionToken(
     const name = payload.name;
     const role = payload.role;
     const department = payload.department;
+    const approvalStatus = payload.approvalStatus;
+    const onboardingCompleted = payload.onboardingCompleted;
 
     if (
       typeof sub !== "string" ||
@@ -69,11 +75,13 @@ export async function verifySessionToken(
     }
 
     return {
-      sub,
+      sub: typeof sub === "string" ? sub : "",
       email,
       name,
       role,
       department: typeof department === "string" ? department : "",
+      approvalStatus: (approvalStatus as "Pending Approval" | "Approved" | "Rejected") || "Pending Approval",
+      onboardingCompleted: typeof onboardingCompleted === "boolean" ? onboardingCompleted : false,
     };
   } catch {
     return null;
@@ -87,6 +95,8 @@ export function sessionPayloadToUser(payload: SessionPayload): SessionUser {
     name: payload.name,
     role: payload.role,
     department: payload.department,
+    approvalStatus: payload.approvalStatus || "Pending Approval",
+    onboardingCompleted: payload.onboardingCompleted || false,
   };
 }
 

@@ -73,6 +73,43 @@ export async function PUT(
       await Goal.updateOne({ _id: goal._id }, { $set: updates });
     });
 
+    const notifyRecipients = new Set<string>();
+    if (goal.creator?.toString() && goal.creator.toString() !== session.id) {
+      notifyRecipients.add(goal.creator.toString());
+    }
+    if (goal.assignedManager?.toString() && goal.assignedManager.toString() !== session.id) {
+      notifyRecipients.add(goal.assignedManager.toString());
+    }
+    if (goal.assignedTo?.length) {
+      goal.assignedTo.forEach((assignee: any) => {
+        const id = assignee.toString();
+        if (id !== session.id) notifyRecipients.add(id);
+      });
+    }
+
+    const { createNotification, notifyAdmins } = await import("@/lib/notifications");
+
+    if (notifyRecipients.size > 0) {
+      for (const recipientId of notifyRecipients) {
+        await createNotification({
+          type: "Goal Created", // Maybe just Goal Created icon is generic enough for Goal Updated
+          title: "Goal Updated",
+          message: `"${goal.title}" was updated by ${session.name}.`,
+          recipient: recipientId,
+          link: `/dashboard/goals?selected=${goal._id}`,
+          relatedGoal: goal._id.toString(),
+        });
+      }
+    }
+
+    await notifyAdmins({
+      type: "Goal Created",
+      title: "Goal Updated",
+      message: `"${goal.title}" was updated by ${session.name}.`,
+      link: `/dashboard/goals?selected=${goal._id}`,
+      relatedGoal: goal._id.toString(),
+    });
+
     return NextResponse.json({ success: true, goal: { ...goal.toObject(), ...updates } });
   } catch (error) {
     console.error("Update goal error:", error);

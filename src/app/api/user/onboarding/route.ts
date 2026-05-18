@@ -14,8 +14,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { firstName, lastName, jobTitle, department, manager, team } =
-      await req.json();
+    const { firstName, lastName, jobTitle, department } = await req.json();
 
     if (!firstName || !lastName || !jobTitle) {
       return NextResponse.json(
@@ -27,18 +26,19 @@ export async function POST(req: Request) {
     await connectDB();
     const fullName = `${firstName} ${lastName}`.trim();
 
+    const updateData = {
+      name: fullName,
+      firstName,
+      lastName,
+      jobTitle,
+      department: department || "",
+      onboardingCompleted: true,
+      approvalStatus: "Pending Approval",
+    };
+
     const updatedUser = await User.findByIdAndUpdate(
       session.id,
-      {
-        name: fullName,
-        firstName,
-        lastName,
-        jobTitle,
-        department: department || "",
-        manager,
-        team,
-        onboardingCompleted: true,
-      },
+      updateData,
       { new: true },
     );
 
@@ -46,12 +46,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    const { notifyAdmins } = await import("@/lib/notifications");
+    await notifyAdmins({
+      type: "Employee Approved", // Or Team Member Added
+      title: "New User Application",
+      message: `New employee application submitted by ${fullName}`,
+      link: `/dashboard/team?approvalUser=${updatedUser._id}`,
+      relatedUser: updatedUser._id.toString(),
+    });
+
+
     const newToken = await createSessionToken({
       id: updatedUser._id.toString(),
       email: updatedUser.email,
       name: updatedUser.name,
       role: updatedUser.role,
       department: updatedUser.department,
+      approvalStatus: "Pending Approval" as const,
+      onboardingCompleted: true,
     });
 
     await setSessionCookie(newToken);

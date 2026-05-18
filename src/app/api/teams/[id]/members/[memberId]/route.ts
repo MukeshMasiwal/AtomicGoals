@@ -32,6 +32,16 @@ export async function DELETE(
 
     await User.findByIdAndUpdate(params.memberId, { team: "" });
 
+    const { createNotification } = await import("@/lib/notifications");
+    await createNotification({
+      type: "Team Updated",
+      title: "Removed From Team",
+      message: `You were removed from the ${team.name} team.`,
+      recipient: params.memberId,
+      link: "/dashboard/team",
+      relatedTeam: params.id,
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Remove team member error:", error);

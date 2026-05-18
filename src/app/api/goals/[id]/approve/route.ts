@@ -86,23 +86,21 @@ export async function POST(
       }
     );
 
-    // Send notifications to creator
+    const { createNotification, notifyAdmins } = await import("@/lib/notifications");
+    const notifType = approvalStatus === "Approved" ? "Goal Approved" : "Goal Rejected";
+
+    // Send notifications to creator and assigned users/managers
     if (creatorUser) {
       const statusText = approvalStatus.toLowerCase();
       // In-app notification
-      await User.updateOne(
-        { _id: creatorUser._id },
-        {
-          $push: {
-             notifications: {
-              title: `Goal ${approvalStatus}`,
-              message: `Your goal "${goal.title}" has been ${statusText} by your manager.`,
-              type: "goal_approval",
-              link: `/dashboard/goals?selected=${goal._id}`
-            }
-          }
-        }
-      );
+      await createNotification({
+        type: notifType,
+        title: `Goal ${approvalStatus}`,
+        message: `Your goal "${goal.title}" has been ${statusText} by ${session.name}.`,
+        recipient: creatorUser._id.toString(),
+        link: `/dashboard/goals?selected=${goal._id}`,
+        relatedGoal: goal._id.toString(),
+      });
 
       // Email notification
       if (creatorUser.email) {
@@ -116,6 +114,40 @@ export async function POST(
         });
       }
     }
+
+    const additionalRecipients = new Set<string>();
+    if (goal.assignedManager?.toString() && goal.assignedManager.toString() !== creatorUser?._id?.toString()) {
+      additionalRecipients.add(goal.assignedManager.toString());
+    }
+    if (goal.assignedTo?.length) {
+      goal.assignedTo.forEach((assignee: any) => {
+        const id = assignee.toString();
+        if (id !== creatorUser?._id?.toString()) {
+          additionalRecipients.add(id);
+        }
+      });
+    }
+
+    if (additionalRecipients.size > 0) {
+      for (const recipientId of additionalRecipients) {
+        await createNotification({
+          type: notifType,
+          title: `Goal ${approvalStatus}`,
+          message: `"${goal.title}" has been ${approvalStatus.toLowerCase()} by ${session.name}.`,
+          recipient: recipientId,
+          link: `/dashboard/goals?selected=${goal._id}`,
+          relatedGoal: goal._id.toString(),
+        });
+      }
+    }
+
+    await notifyAdmins({
+      type: notifType,
+      title: `Goal ${approvalStatus}`,
+      message: `"${goal.title}" was ${approvalStatus.toLowerCase()} by ${session.name}.`,
+      link: `/dashboard/goals?selected=${goal._id}`,
+      relatedGoal: goal._id.toString(),
+    });
 
     return NextResponse.json({ success: true, goal });
   } catch (error) {

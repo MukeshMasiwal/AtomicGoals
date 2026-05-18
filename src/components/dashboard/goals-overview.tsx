@@ -45,17 +45,17 @@ function GoalCard({ goal }: { goal: GoalItem }) {
       <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-muted-foreground">
         <div>
           <span className="block text-muted-foreground">Weight</span>
-          <span className="font-medium text-slate-700">{goal.weight}</span>
+          <span className="font-medium text-slate-700 dark:text-slate-300">{goal.weight}</span>
         </div>
         <div>
           <span className="block text-muted-foreground">Deadline</span>
-          <span className="font-medium text-slate-700">{goal.deadline}</span>
+          <span className="font-medium text-slate-700 dark:text-slate-300">{goal.deadline}</span>
         </div>
       </div>
       <div className="mt-4 space-y-2">
         <div className="flex justify-between text-xs">
           <span className="text-muted-foreground">Progress</span>
-          <span className="font-semibold text-slate-700">{goal.progress}%</span>
+          <span className="font-semibold text-slate-700 dark:text-slate-300">{goal.progress}%</span>
         </div>
         <Progress value={goal.progress} />
       </div>
@@ -136,7 +136,7 @@ export default function GoalsOverview({ goals }: GoalsOverviewProps) {
                         "text-sm",
                         goal.approval.includes("Awaiting") ||
                           goal.approval.includes("pending")
-                          ? "font-medium text-amber-600"
+                          ? "font-medium text-amber-600 dark:text-amber-500"
                           : "text-foreground/80",
                       )}
                     >

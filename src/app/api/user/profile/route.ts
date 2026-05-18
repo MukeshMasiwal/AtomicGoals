@@ -48,6 +48,8 @@ export async function PUT(req: Request) {
       name: updatedUser.name,
       role: updatedUser.role,
       department: updatedUser.department,
+      approvalStatus: updatedUser.approvalStatus ?? "Pending Approval",
+      onboardingCompleted: updatedUser.onboardingCompleted ?? false,
     });
 
     await setSessionCookie(newToken);
