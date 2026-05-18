@@ -16,7 +16,10 @@ export async function POST(request: Request) {
 
     if (!user) {
       // Return a success response even if user not found for security purposes
-      return Response.json({ message: "If an account exists with this email, a reset link has been sent." });
+      return Response.json({
+        message:
+          "If an account exists with this email, a reset link has been sent.",
+      });
     }
 
     const { token, hashedToken } = generateResetToken();
@@ -26,14 +29,17 @@ export async function POST(request: Request) {
     await user.save();
 
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001"}/reset-password/${token}`;
-    
+
     await sendMail({
       to: user.email,
       subject: "GoalTrack - Password Reset Request",
       html: getResetPasswordHtml(resetUrl),
     });
 
-    return Response.json({ message: "If an account exists with this email, a reset link has been sent." });
+    return Response.json({
+      message:
+        "If an account exists with this email, a reset link has been sent.",
+    });
   } catch (error) {
     console.error("Forgot password error:", error);
     return Response.json({ error: "An error occurred" }, { status: 500 });

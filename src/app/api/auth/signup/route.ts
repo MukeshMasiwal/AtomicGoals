@@ -29,14 +29,14 @@ export async function POST(request: Request) {
   if (!name || !email || !password) {
     return Response.json(
       { error: "Name, email, and password are required." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   if (password.length < 6) {
     return Response.json(
       { error: "Password must be at least 6 characters." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -48,7 +48,10 @@ export async function POST(request: Request) {
 
     const existing = await User.findOne({ email }).lean();
     if (existing) {
-      return Response.json({ error: "Email already registered." }, { status: 409 });
+      return Response.json(
+        { error: "Email already registered." },
+        { status: 409 },
+      );
     }
 
     const passwordHash = await hashPassword(password);

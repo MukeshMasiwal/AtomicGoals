@@ -9,12 +9,14 @@ const quarterlyUpdateSchema = new Schema(
     submittedBy: { type: String, required: true, lowercase: true, trim: true },
     department: { type: String, default: "", trim: true },
   },
-  { timestamps: true, collection: "quarterly_updates" }
+  { timestamps: true, collection: "quarterly_updates" },
 );
 
 quarterlyUpdateSchema.index({ goalId: 1, quarter: 1 });
 
-export type QuarterlyUpdateDocument = InferSchemaType<typeof quarterlyUpdateSchema>;
+export type QuarterlyUpdateDocument = InferSchemaType<
+  typeof quarterlyUpdateSchema
+>;
 
 export const QuarterlyUpdate =
   models.QuarterlyUpdate || model("QuarterlyUpdate", quarterlyUpdateSchema);

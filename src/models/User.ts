@@ -20,7 +20,8 @@ const userSchema = new Schema(
     },
     jobTitle: { type: String, default: "", trim: true },
     department: { type: String, default: "", trim: true },
-    team: { type: String, default: "", trim: true },
+    team: { type: Schema.Types.ObjectId, ref: "Team" },
+    manager: { type: Schema.Types.ObjectId, ref: "User" },
     avatar: { type: String, default: "" },
     notifications: [
       {
@@ -29,17 +30,22 @@ const userSchema = new Schema(
         read: { type: Boolean, default: false },
         createdAt: { type: Date, default: Date.now },
         type: { type: String },
-        link: { type: String }
-      }
+        link: { type: String },
+      },
     ],
     onboardingCompleted: { type: Boolean, default: false },
     verified: { type: Boolean, default: false },
+    employeeStatus: {
+      type: String,
+      enum: ["Active", "On Leave"],
+      default: "Active",
+    },
     isSeedUser: { type: Boolean, default: false },
     password: { type: String, select: false },
     otp: { type: String, select: false },
     otpExpiry: { type: Date, select: false },
   },
-  { timestamps: true, collection: "users" }
+  { timestamps: true, collection: "users" },
 );
 
 export type UserDocument = InferSchemaType<typeof userSchema>;

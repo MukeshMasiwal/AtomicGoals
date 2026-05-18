@@ -5,7 +5,14 @@ import DashboardShell from "@/components/layout/dashboard-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Search, Loader2, Shield, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,7 +33,7 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
     try {
       const [usersRes, teamsRes] = await Promise.all([
         fetch("/api/users"),
-        fetch("/api/teams")
+        fetch("/api/teams"),
       ]);
       if (usersRes.ok) {
         const data = await usersRes.json();
@@ -51,7 +58,9 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
         body: JSON.stringify({ role: newRole }),
       });
       if (res.ok) {
-        setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+        setUsers(
+          users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
+        );
       }
     } catch (err) {
       console.error(err);
@@ -59,11 +68,16 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to delete this user? This cannot be undone.")) return;
+    if (
+      !confirm(
+        "Are you sure you want to delete this user? This cannot be undone.",
+      )
+    )
+      return;
     try {
       const res = await fetch(`/api/users/${userId}`, { method: "DELETE" });
       if (res.ok) {
-        setUsers(users.filter(u => u.id !== userId));
+        setUsers(users.filter((u) => u.id !== userId));
       } else {
         alert("Failed to delete user.");
       }
@@ -73,46 +87,61 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
   };
 
   const filteredUsers = users.filter((u) => {
-    if (departmentFilter !== "All" && u.department !== departmentFilter) return false;
+    if (departmentFilter !== "All" && u.department !== departmentFilter)
+      return false;
     if (!search) return true;
     const s = search.toLowerCase();
-    return u.name.toLowerCase().includes(s) || u.email.toLowerCase().includes(s);
+    return (
+      u.name.toLowerCase().includes(s) || u.email.toLowerCase().includes(s)
+    );
   });
 
   function getRoleBadge(role: string) {
     switch (role) {
-      case "admin": return "bg-purple-100 text-purple-700 border-purple-200";
-      case "manager": return "bg-blue-100 text-blue-700 border-blue-200";
-      default: return "bg-slate-100 text-slate-700 border-slate-200";
+      case "admin":
+        return "bg-purple-100 text-purple-700 border-purple-200";
+      case "manager":
+        return "bg-blue-100 text-blue-700 border-blue-200";
+      default:
+        return "bg-muted text-slate-700 border-border";
     }
   }
 
   return (
-    <DashboardShell title="User Management" userName={sessionUser.name} avatar="" roleLabel={sessionUser.roleLabel} role={sessionUser.role}>
+    <DashboardShell
+      title="User Management"
+      userName={sessionUser.name}
+      avatar=""
+      roleLabel={sessionUser.roleLabel}
+      role={sessionUser.role}
+    >
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900">User Management</h2>
-            <p className="text-slate-500 text-sm mt-1">Admin control center for users, roles, and assignments.</p>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+              User Management
+            </h2>
+            <p className="text-muted-foreground text-sm mt-1">
+              Admin control center for users, roles, and assignments.
+            </p>
           </div>
         </div>
 
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-border shadow-sm">
           <CardContent className="p-4 flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input 
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search users by name or email..." 
+                placeholder="Search users by name or email..."
                 className="pl-9"
               />
             </div>
             <select
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="flex h-10 w-full sm:w-48 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+              className="flex h-10 w-full sm:w-48 rounded-md border border-border bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
             >
               <option value="All">All Departments</option>
               <option value="Engineering">Engineering</option>
@@ -129,61 +158,95 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-sm overflow-hidden">
+        <Card className="border-border shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-slate-50/50">
+              <TableHeader className="bg-muted/20">
                 <TableRow>
-                  <TableHead className="w-[250px] font-semibold text-slate-600">User</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Role</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Department</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Team</TableHead>
-                  <TableHead className="text-right font-semibold text-slate-600">Manage</TableHead>
+                  <TableHead className="w-[250px] font-semibold text-foreground/80">
+                    User
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground/80">
+                    Role
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground/80">
+                    Department
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground/80">
+                    Team
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground/80">
+                    Status
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground/80">
+                    Manager
+                  </TableHead>
+                  <TableHead className="text-right font-semibold text-foreground/80">
+                    Manage
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-48 text-center text-slate-500">
-                      <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-indigo-500" /> Loading users...
+                    <TableCell
+                      colSpan={5}
+                      className="h-48 text-center text-muted-foreground"
+                    >
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-indigo-500" />{" "}
+                      Loading users...
                     </TableCell>
                   </TableRow>
                 ) : filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-48 text-center text-slate-500">No users found.</TableCell>
+                    <TableCell
+                      colSpan={7}
+                      className="h-48 text-center text-muted-foreground"
+                    >
+                      No users found.
+                    </TableCell>
                   </TableRow>
                 ) : (
                   filteredUsers.map((u) => (
-                    <TableRow key={u.id} className="border-slate-100 hover:bg-slate-50/50 transition-colors">
+                    <TableRow
+                      key={u.id}
+                      className="border-slate-100 hover:bg-muted/20 transition-colors"
+                    >
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9 border border-slate-200">
+                          <Avatar className="h-9 w-9 border border-border">
                             <AvatarFallback className="bg-indigo-50 text-indigo-700 text-xs font-semibold">
                               {u.name.substring(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col">
-                            <span className="font-medium text-slate-900">{u.name}</span>
-                            <span className="text-xs text-slate-500">{u.email}</span>
+                            <span className="font-medium text-foreground">
+                              {u.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {u.email}
+                            </span>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <select
                           value={u.role}
-                          onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                          onChange={(e) =>
+                            handleRoleChange(u.id, e.target.value)
+                          }
                           disabled={u.id === sessionUser.id}
-                          className="text-sm rounded border border-slate-200 bg-white px-2 py-1 focus:ring-2 focus:ring-indigo-500"
+                          className="text-sm rounded border border-border bg-card px-2 py-1 focus:ring-2 focus:ring-indigo-500"
                         >
                           <option value="employee">Employee</option>
                           <option value="manager">Manager</option>
                           <option value="admin">Admin</option>
                         </select>
                       </TableCell>
-                      <TableCell className="text-sm text-slate-600">
+                      <TableCell className="text-sm text-foreground/80">
                         {u.department || "—"}
                       </TableCell>
-                      <TableCell className="text-sm text-slate-600">
+                      <TableCell className="text-sm text-foreground/80">
                         <select
                           value={u.team || ""}
                           onChange={async (e) => {
@@ -194,21 +257,107 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
                               body: JSON.stringify({ team: newTeam || null }),
                             });
                             if (res.ok) {
-                              setUsers(users.map(user => user.id === u.id ? { ...user, team: newTeam } : user));
+                              setUsers(
+                                users.map((user) =>
+                                  user.id === u.id
+                                    ? { ...user, team: newTeam }
+                                    : user,
+                                ),
+                              );
                             }
                           }}
-                          className="text-sm rounded border border-slate-200 bg-white px-2 py-1 focus:ring-2 focus:ring-indigo-500 w-full"
+                          className="text-sm rounded border border-border bg-card px-2 py-1 focus:ring-2 focus:ring-indigo-500 w-full"
                         >
                           <option value="">No Team</option>
-                          {teams.map(t => (
-                            <option key={t._id} value={t._id}>{t.name}</option>
+                          {teams.map((t) => (
+                            <option key={t._id} value={t._id}>
+                              {t.name}
+                            </option>
                           ))}
                         </select>
                       </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-2">
+                          <Badge
+                            className={
+                              u.accountStatus === "Active"
+                                ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                                : "bg-amber-100 text-amber-700 hover:bg-amber-100"
+                            }
+                            variant={null}
+                          >
+                            {u.accountStatus}
+                          </Badge>
+                          <select
+                            value={u.status}
+                            onChange={async (e) => {
+                              const newStatus = e.target.value;
+                              const res = await fetch(`/api/users/${u.id}`, {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  employeeStatus: newStatus,
+                                }),
+                              });
+                              if (res.ok) {
+                                setUsers(
+                                  users.map((user) =>
+                                    user.id === u.id
+                                      ? { ...user, status: newStatus }
+                                      : user,
+                                  ),
+                                );
+                              }
+                            }}
+                            className="text-xs rounded border border-border bg-card px-2 py-1 focus:ring-2 focus:ring-indigo-500 w-full"
+                          >
+                            <option value="Active">Active</option>
+                            <option value="On Leave">On Leave</option>
+                          </select>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-foreground/80">
+                        <select
+                          value={u.manager || ""}
+                          onChange={async (e) => {
+                            const newManager = e.target.value;
+                            const res = await fetch(`/api/users/${u.id}`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                manager: newManager || null,
+                              }),
+                            });
+                            if (res.ok) {
+                              setUsers(
+                                users.map((user) =>
+                                  user.id === u.id
+                                    ? { ...user, manager: newManager }
+                                    : user,
+                                ),
+                              );
+                            }
+                          }}
+                          className="text-sm rounded border border-border bg-card px-2 py-1 focus:ring-2 focus:ring-indigo-500 w-full"
+                        >
+                          <option value="">No Manager</option>
+                          {users
+                            .filter(
+                              (user) =>
+                                user.role === "manager" ||
+                                user.role === "admin",
+                            )
+                            .map((m) => (
+                              <option key={m.id} value={m.id}>
+                                {m.name}
+                              </option>
+                            ))}
+                        </select>
+                      </TableCell>
                       <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
                           onClick={() => handleDeleteUser(u.id)}
                           disabled={u.id === sessionUser.id}

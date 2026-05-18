@@ -3,7 +3,15 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, ShieldCheck, UserCog, User, AlertTriangle, Clock, Info } from "lucide-react";
+import {
+  Loader2,
+  ShieldCheck,
+  UserCog,
+  User,
+  AlertTriangle,
+  Clock,
+  Info,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { Input } from "@/components/ui/input";
@@ -63,7 +71,9 @@ export default function LoginPage() {
         body: JSON.stringify({ email }),
       });
 
-      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
 
       if (!response.ok) {
         setStatus("error");
@@ -108,7 +118,7 @@ export default function LoginPage() {
 
       setStatus("success");
       setMessage(`Welcome, ${data.user?.name || email}. Redirecting…`);
-      
+
       // Perform immediate redirect based on role
       redirectBasedOnRole(data.user?.role);
     } catch {
@@ -119,7 +129,6 @@ export default function LoginPage() {
 
   // Helper function for quick seed login
   async function handleSeedLogin(seedEmail: string) {
-    
     setStatus("loading");
     setMessage("");
 
@@ -143,7 +152,7 @@ export default function LoginPage() {
 
       setStatus("success");
       setMessage(`Welcome, ${data.user?.name || seedEmail}. Redirecting…`);
-      
+
       // Perform immediate redirect based on role
       redirectBasedOnRole(data.user?.role);
     } catch {
@@ -160,7 +169,7 @@ export default function LoginPage() {
         transition={{ duration: 0.4 }}
         className="w-full max-w-md"
       >
-        <Card className="border-slate-200/60 shadow-xl bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800">
+        <Card className="border-border/60 shadow-xl bg-card/80 backdrop-blur-xl ">
           <CardHeader className="space-y-4 pb-6 flex flex-col items-center text-center">
             <Logo className="mb-2" />
             <div className="space-y-1">
@@ -168,13 +177,13 @@ export default function LoginPage() {
                 Welcome
               </CardTitle>
               <CardDescription className="text-base">
-                {step === "email" 
-                  ? "Enter your email to receive a login code." 
+                {step === "email"
+                  ? "Enter your email to receive a login code."
                   : "Enter the 6-digit code sent to your email."}
               </CardDescription>
             </div>
           </CardHeader>
-          
+
           <CardContent>
             {step === "email" ? (
               <form onSubmit={handleSendOtp} className="space-y-4">
@@ -203,9 +212,9 @@ export default function LoginPage() {
                   />
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-2" 
+                <Button
+                  type="submit"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-2"
                   disabled={status === "loading" || !email}
                 >
                   {status === "loading" ? (
@@ -246,10 +255,12 @@ export default function LoginPage() {
                   />
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-2" 
-                  disabled={status === "loading" || otp.length < 5 || timeLeft === 0}
+                <Button
+                  type="submit"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-2"
+                  disabled={
+                    status === "loading" || otp.length < 5 || timeLeft === 0
+                  }
                 >
                   {status === "loading" ? (
                     <>
@@ -263,7 +274,7 @@ export default function LoginPage() {
 
                 <div className="flex flex-col items-center gap-3 mt-6">
                   {timeLeft > 0 ? (
-                    <div className="flex items-center gap-1.5 text-sm text-slate-500 font-medium bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground font-medium bg-muted/50 px-3 py-1.5 rounded-full border border-border ">
                       <Clock className="h-3.5 w-3.5" />
                       Code expires in {formatTime(timeLeft)}
                     </div>
@@ -274,39 +285,40 @@ export default function LoginPage() {
                   )}
 
                   <div className="flex items-center gap-4 text-sm mt-2">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={(e: any) => {
                         e.preventDefault();
                         if (timeLeft === 0) handleSendOtp(e);
                       }}
                       disabled={timeLeft > 0 || status === "loading"}
-                      className={`font-medium ${timeLeft > 0 ? "text-slate-400 cursor-not-allowed" : "text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"}`}
+                      className={`font-medium ${timeLeft > 0 ? "text-muted-foreground cursor-not-allowed" : "text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"}`}
                     >
                       Resend code
                     </button>
-                    <span className="text-slate-300 dark:text-slate-700">•</span>
-                    <button 
-                      type="button" 
+                    <span className="text-slate-300 ">•</span>
+                    <button
+                      type="button"
                       onClick={() => {
                         setStep("email");
                         setStatus("idle");
                         setMessage("");
                       }}
-                      className="font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                      className="font-medium text-muted-foreground hover:text-slate-700 dark:hover:text-slate-300"
                     >
                       Change email
                     </button>
                   </div>
                 </div>
 
-                <div className="mt-6 p-4 rounded-xl bg-slate-50 border border-slate-100 dark:bg-slate-900/40 dark:border-slate-800/60 flex gap-3 text-left">
+                <div className="mt-6 p-4 rounded-xl bg-muted/50 border border-slate-100 flex gap-3 text-left">
                   <Info className="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-200">
-                      Didn't receive the OTP? Please check your Spam or Promotions folder.
+                    <p className="text-sm font-medium text-foreground ">
+                      Didn't receive the OTP? Please check your Spam or
+                      Promotions folder.
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                       Email delivery can occasionally take a few moments.
                     </p>
                   </div>
@@ -315,66 +327,98 @@ export default function LoginPage() {
             )}
           </CardContent>
 
-          <CardFooter className="pt-2 text-center text-sm flex flex-col gap-2 border-t border-slate-100 dark:border-slate-800 mt-4">
-            <Link href="/" className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <CardFooter className="pt-2 text-center text-sm flex flex-col gap-2 border-t border-slate-100 mt-4">
+            <Link
+              href="/"
+              className="text-muted-foreground hover:text-foreground/80 dark:hover:text-slate-200"
+            >
               Back to home
             </Link>
           </CardFooter>
         </Card>
 
         {/* Seed login section (Visible for Demo Mode) */}
-        {(
-          <motion.div 
+        {
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-800/50"
+            className="mt-8 pt-6 border-t border-border/50 "
           >
             <div className="flex flex-col items-center mb-6">
               <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-sky-600 bg-sky-50 dark:text-sky-300 dark:bg-sky-500/10 px-2.5 py-1 rounded-full border border-sky-100 dark:border-sky-500/20 mb-3">
                 Interactive Demo
               </div>
-              <h3 className="text-sm font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">DEMO CREDENTIALS</h3>
-              <p className="text-xs text-slate-400 mt-2 text-center max-w-[200px]">Click a role below to bypass email verification.</p>
+              <h3 className="text-sm font-bold tracking-widest text-muted-foreground dark:text-muted-foreground uppercase">
+                DEMO CREDENTIALS
+              </h3>
+              <p className="text-xs text-muted-foreground mt-2 text-center max-w-[200px]">
+                Click a role below to bypass email verification.
+              </p>
             </div>
 
             <div className="flex flex-col gap-3">
               {[
-                { role: "Admin", email: "admin@atomicgoals.com", icon: ShieldCheck },
-                { role: "Manager", email: "manager@atomicgoals.com", icon: UserCog },
-                { role: "Employee1", email: "employee1@atomicgoals.com", icon: User }
+                {
+                  role: "Admin",
+                  email: "admin@atomicgoals.com",
+                  icon: ShieldCheck,
+                },
+                {
+                  role: "Manager",
+                  email: "manager@atomicgoals.com",
+                  icon: UserCog,
+                },
+                {
+                  role: "Employee1",
+                  email: "employee1@atomicgoals.com",
+                  icon: User,
+                },
               ].map((cred) => (
                 <button
                   key={cred.email}
                   type="button"
                   onClick={() => handleSeedLogin(cred.email)}
                   disabled={status === "loading"}
-                  className="group relative flex items-center justify-between p-4 rounded-2xl border border-slate-200/80 bg-white/60 backdrop-blur-md shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/10 dark:border-slate-800/80 dark:bg-slate-900/60 hover:border-indigo-400 dark:hover:border-indigo-500/50 overflow-hidden"
+                  className="group relative flex items-center justify-between p-4 rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-400 dark:hover:border-indigo-500/50 overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/5 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
+
                   <div className="relative z-10 flex items-center gap-4">
-                    <div className="flex items-center justify-center h-11 w-11 rounded-xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 group-hover:scale-110 dark:border-slate-700/80 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:border-indigo-200 dark:group-hover:border-indigo-500/30">
+                    <div className="flex items-center justify-center h-11 w-11 rounded-xl border border-border/80 bg-card shadow-sm transition-all duration-300 group-hover:scale-110 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:border-indigo-200 dark:group-hover:border-indigo-500/30">
                       <cred.icon className="h-5 w-5" />
                     </div>
                     <div className="text-left">
-                      <div className="font-bold text-sm text-slate-900 dark:text-slate-100 tracking-tight group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
+                      <div className="font-bold text-sm text-foreground tracking-tight group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
                         {cred.role}
                       </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                      <div className="text-xs text-muted-foreground dark:text-muted-foreground font-medium mt-0.5">
                         {cred.email}
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="relative z-10 flex items-center justify-center h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+
+                  <div className="relative z-10 flex items-center justify-center h-8 w-8 rounded-full bg-muted dark:bg-slate-800 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100 text-muted-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
                   </div>
                 </button>
               ))}
             </div>
           </motion.div>
-        )}
+        }
       </motion.div>
     </div>
   );

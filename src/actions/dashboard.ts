@@ -20,7 +20,7 @@ export async function fetchDashboardData() {
 
   try {
     await connectDB();
-    const dbUser = await User.findById(session.id).lean() as any;
+    const dbUser = (await User.findById(session.id).lean()) as any;
     if (!dbUser) throw new Error("User not found");
 
     let filter: any = {};
@@ -28,27 +28,33 @@ export async function fetchDashboardData() {
     if (role === "admin") {
       filter = {};
     } else if (role === "manager") {
-      const teams = await Team.find({ manager: session.id }).select("_id").lean();
+      const teams = await Team.find({ manager: session.id })
+        .select("_id")
+        .lean();
       const teamIds = teams.map((t) => t._id);
-      
+
       filter = {
         $or: [
           { team: { $in: teamIds } },
           { creator: session.id },
-          { assignedTo: session.id }
-        ]
+          { assignedTo: session.id },
+        ],
       };
     } else {
       filter = {
         $or: [
           { creator: session.id },
           { assignedTo: session.id },
-          ...(dbUser.team ? [{ team: dbUser.team }] : [])
-        ]
+          ...(dbUser.team ? [{ team: dbUser.team }] : []),
+        ],
       };
     }
 
-    const goals = await Goal.find(filter).sort({ updatedAt: -1 }).limit(8).lean();
+    const goals = await Goal.find(filter)
+      .populate("creator", "name avatar")
+      .sort({ updatedAt: -1 })
+      .limit(8)
+      .lean();
     const goalCount = await Goal.countDocuments(filter);
 
     const formattedGoals =
@@ -79,9 +85,59 @@ export async function fetchDashboardData() {
     const avgProgress =
       goals.length > 0
         ? Math.round(
-            goals.reduce((sum, goal) => sum + (goal.progress ?? 0), 0) / goals.length
+            goals.reduce((sum, goal) => sum + (goal.progress ?? 0), 0) /
+              goals.length,
           )
         : mock.progress;
+
+    // Build pending actions from Pending Approval goals
+    const pendingApprovalGoals = await Goal.find({
+      ...filter,
+      approvalStatus: "Pending Approval",
+    })
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .lean();
+    const dbPendingActions = pendingApprovalGoals.map((g) => ({
+      id: String(g._id),
+      title: "Goal Approval Required",
+      description: `"${g.title}" is waiting for approval.`,
+      icon: "goals" as const,
+      tone: "amber" as const,
+      cta: "Review Goal",
+    }));
+
+    // Build activity feed from recent goals
+    const dbActivityFeed = goals.slice(0, 5).map((g: any) => ({
+      id: String(g._id),
+      title: "Goal Updated",
+      description: `"${g.title}" was recently updated.`,
+      time: g.updatedAt
+        ? new Date(g.updatedAt).toLocaleDateString()
+        : "Recently",
+      actor: g.creator?.name || "System",
+      initials: (g.creator?.name || "SY").substring(0, 2).toUpperCase(),
+      type: "edited" as const,
+    }));
+
+    const approvedCount = await Goal.countDocuments({ ...filter, approvalStatus: "Approved" });
+    const pendingCount = await Goal.countDocuments({ ...filter, approvalStatus: "Pending Approval" });
+    const rejectedCount = await Goal.countDocuments({ ...filter, approvalStatus: "Rejected" });
+
+    let dynamicKpis = mock.kpis;
+    if (role === "employee") {
+      dynamicKpis = [
+        { label: "Total Goals", value: goalCount, trend: "", tone: "up" },
+        { label: "Goals Approved", value: approvedCount, trend: "", tone: "up" },
+        { label: "Goals Pending", value: pendingCount, trend: "", tone: "down" },
+      ];
+    } else {
+      dynamicKpis = [
+        { label: "Total Goals", value: goalCount, trend: "", tone: "up" },
+        { label: "Approved Goals", value: approvedCount, trend: "", tone: "up" },
+        { label: "Rejected Goals", value: rejectedCount, trend: "", tone: "down" },
+      ];
+    }
 
     return {
       ...mock,
@@ -93,11 +149,11 @@ export async function fetchDashboardData() {
       },
       goals: formattedGoals,
       progress: avgProgress,
-      kpis: mock.kpis.map((kpi, index) =>
-        index === 0 && typeof kpi.value === "number"
-          ? { ...kpi, value: goalCount }
-          : kpi
-      ),
+      kpis: dynamicKpis,
+      pendingActions:
+        goals.length > 0 ? dbPendingActions : mock.pendingActions,
+      activityFeed:
+        goals.length > 0 ? dbActivityFeed : mock.activityFeed,
       source: goals.length > 0 ? ("database" as const) : ("mock" as const),
     };
   } catch (err) {

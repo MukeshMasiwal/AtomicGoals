@@ -28,15 +28,17 @@ type RecentActivityProps = {
 export default function RecentActivity({ items }: RecentActivityProps) {
   if (items.length === 0) {
     return (
-      <Card className="border border-dashed border-slate-200 bg-white p-8 text-center shadow-soft">
+      <Card className="border border-dashed border-border bg-card p-8 text-center shadow-soft">
         <Activity className="mx-auto h-10 w-10 text-slate-300" />
-        <p className="mt-3 text-sm text-slate-500">No recent activity yet.</p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          No recent activity yet.
+        </p>
       </Card>
     );
   }
 
   return (
-    <Card className="border border-slate-200 bg-white shadow-soft">
+    <Card className="border border-border bg-card shadow-soft">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg">Recent Activity</CardTitle>
       </CardHeader>
@@ -64,24 +66,30 @@ export default function RecentActivity({ items }: RecentActivityProps) {
                 <div
                   className={cn(
                     "relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-                    config.color
+                    config.color,
                   )}
                 >
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1 pt-0.5">
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <p className="font-medium text-slate-900">{item.title}</p>
-                    <time className="shrink-0 text-xs text-slate-400">{item.time}</time>
+                    <p className="font-medium text-foreground">{item.title}</p>
+                    <time className="shrink-0 text-xs text-muted-foreground">
+                      {item.time}
+                    </time>
                   </div>
-                  <p className="mt-1 text-sm text-slate-500">{item.description}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {item.description}
+                  </p>
                   <div className="mt-2 flex items-center gap-2">
                     <Avatar className="h-6 w-6">
-                      <AvatarFallback className="bg-slate-100 text-[10px] font-semibold text-slate-600">
+                      <AvatarFallback className="bg-muted text-[10px] font-semibold text-foreground/80">
                         {item.initials}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-xs text-slate-400">{item.actor}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {item.actor}
+                    </span>
                   </div>
                 </div>
               </motion.li>

@@ -14,7 +14,7 @@ export default function RoleSwitcher() {
   const { role, setRole } = useRole();
 
   return (
-    <div className="hidden items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 md:flex">
+    <div className="hidden items-center gap-1 rounded-xl border border-border bg-muted/50 p-1 md:flex">
       {options.map((option) => (
         <button
           key={option.value}
@@ -23,8 +23,8 @@ export default function RoleSwitcher() {
           className={cn(
             "rounded-lg px-3 py-1.5 text-xs font-semibold transition",
             role === option.value
-              ? "bg-white text-primary shadow-sm"
-              : "text-slate-500 hover:text-slate-700"
+              ? "bg-card text-primary shadow-sm"
+              : "text-muted-foreground hover:text-slate-700",
           )}
         >
           {option.label}

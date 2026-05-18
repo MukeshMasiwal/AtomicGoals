@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     if (!email || !otp) {
       return Response.json(
         { error: "Email and OTP are required." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     // Clear OTP after successful verification
     await User.updateOne(
       { _id: user._id },
-      { $unset: { otp: 1, otpExpiry: 1 } }
+      { $unset: { otp: 1, otpExpiry: 1 } },
     );
 
     const sessionUser = {

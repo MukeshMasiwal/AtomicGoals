@@ -55,7 +55,7 @@ export default function DashboardShell({
       <div
         className={cn(
           "flex min-h-screen flex-1 flex-col transition-[margin] duration-300",
-          collapsed ? "lg:ml-[88px]" : "lg:ml-64"
+          collapsed ? "lg:ml-[88px]" : "lg:ml-64",
         )}
       >
         <TopNav
@@ -65,7 +65,7 @@ export default function DashboardShell({
           roleLabel={roleLabel}
           onToggleSidebar={() => setMobileOpen(true)}
         />
-        <main className="flex-1 space-y-8 bg-slate-50/80 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <main className="flex-1 space-y-8 bg-muted/30 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           {children}
         </main>
       </div>

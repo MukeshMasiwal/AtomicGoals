@@ -52,17 +52,30 @@ export default function DashboardCharts() {
         <h3>Employee Progress</h3>
         <div style={{ width: "100%", height: "220px" }}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={progressData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <BarChart
+              data={progressData}
+              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                domain={[0, 100]}
+                tick={{ fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+              />
               <Tooltip cursor={{ fill: "transparent" }} />
               <Bar dataKey="value" fill="#1d4ed8" radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
-      
+
       <div className="chart-card">
         <h3>Approval Rate</h3>
         <div style={{ width: "100%", height: "220px" }}>
@@ -77,17 +90,39 @@ export default function DashboardCharts() {
                 stroke="none"
               >
                 {approvalData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
                 ))}
               </Pie>
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex justify-center gap-4 text-xs mt-2" style={{ display: 'flex', justifyContent: 'center', gap: '1rem', fontSize: '12px', marginTop: '8px' }}>
+        <div
+          className="flex justify-center gap-4 text-xs mt-2"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "1rem",
+            fontSize: "12px",
+            marginTop: "8px",
+          }}
+        >
           {approvalData.map((entry, index) => (
-            <div key={entry.name} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: COLORS[index % COLORS.length] }}></span>
+            <div
+              key={entry.name}
+              style={{ display: "flex", alignItems: "center", gap: "4px" }}
+            >
+              <span
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  backgroundColor: COLORS[index % COLORS.length],
+                }}
+              ></span>
               <span>{entry.name}</span>
             </div>
           ))}
@@ -98,12 +133,31 @@ export default function DashboardCharts() {
         <h3>Department Performance</h3>
         <div style={{ width: "100%", height: "220px" }}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <LineChart
+              data={performanceData}
+              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-              <YAxis domain={[60, 90]} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+              <XAxis
+                dataKey="month"
+                tick={{ fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                domain={[60, 90]}
+                tick={{ fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+              />
               <Tooltip />
-              <Line type="monotone" dataKey="value" stroke="#1d4ed8" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} />
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="#1d4ed8"
+                strokeWidth={3}
+                dot={{ r: 4, strokeWidth: 2 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -113,10 +167,23 @@ export default function DashboardCharts() {
         <h3>Quarterly Completion</h3>
         <div style={{ width: "100%", height: "220px" }}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={quarterlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <BarChart
+              data={quarterlyData}
+              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="quarter" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+              <XAxis
+                dataKey="quarter"
+                tick={{ fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                domain={[0, 100]}
+                tick={{ fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+              />
               <Tooltip cursor={{ fill: "transparent" }} />
               <Bar dataKey="value" fill="#3b82f6" radius={[2, 2, 0, 0]} />
             </BarChart>

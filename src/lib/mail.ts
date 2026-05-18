@@ -33,19 +33,19 @@ export async function sendMail(options: SendMailOptions) {
 
 export function getResetPasswordHtml(resetUrl: string) {
   return `
-  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-    <h2 style="color: #4F46E5;">Password Reset Request</h2>
-    <p>You recently requested to reset your password for your GoalTrack account.</p>
-    <p>Click the button below to proceed. This link is valid for 15 minutes.</p>
-    <div style="margin: 30px 0;">
-      <a href="${resetUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Reset Password</a>
-    </div>
-    <p>If you didn't make this request, you can safely ignore this email.</p>
-    <hr style="border: none; border-top: 1px solid #eaeaea; margin: 30px 0;">
-    <p style="font-size: 12px; color: #666;">
-      If you're having trouble clicking the button, copy and paste this URL into your browser: <br>
-      <a href="${resetUrl}" style="color: #4F46E5;">${resetUrl}</a>
-    </p>
-  </div>
-  `;
+ <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+ <h2 style="color: #4F46E5;">Password Reset Request</h2>
+ <p>You recently requested to reset your password for your GoalTrack account.</p>
+ <p>Click the button below to proceed. This link is valid for 15 minutes.</p>
+ <div style="margin: 30px 0;">
+ <a href="${resetUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Reset Password</a>
+ </div>
+ <p>If you didn't make this request, you can safely ignore this email.</p>
+ <hr style="border: none; border-top: 1px solid #eaeaea; margin: 30px 0;">
+ <p style="font-size: 12px; color: #666;">
+ If you're having trouble clicking the button, copy and paste this URL into your browser: <br>
+ <a href="${resetUrl}" style="color: #4F46E5;">${resetUrl}</a>
+ </p>
+ </div>
+ `;
 }

@@ -21,7 +21,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
     className={cn(
       "flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none",
       inset && "pl-8",
-      className
+      className,
     )}
     {...props}
   >
@@ -39,8 +39,8 @@ const DropdownMenuSubContent = React.forwardRef<
   <DropdownMenuPrimitive.SubContent
     ref={ref}
     className={cn(
-      "z-50 min-w-[8rem] overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-soft",
-      className
+      "z-50 min-w-[8rem] overflow-hidden rounded-xl border border-border bg-card p-1 shadow-soft",
+      className,
     )}
     {...props}
   />
@@ -58,8 +58,8 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "z-50 min-w-[12rem] overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-soft",
-        className
+        "z-50 min-w-[12rem] overflow-hidden rounded-xl border border-border bg-card p-1 shadow-soft",
+        className,
       )}
       {...props}
     />
@@ -77,9 +77,9 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none transition-colors focus:bg-slate-100",
+      "relative flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none transition-colors focus:bg-muted",
       inset && "pl-8",
-      className
+      className,
     )}
     {...props}
   />
@@ -93,7 +93,7 @@ const DropdownMenuSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1 my-1 h-px bg-slate-100", className)}
+    className={cn("-mx-1 my-1 h-px bg-muted", className)}
     {...props}
   />
 ));

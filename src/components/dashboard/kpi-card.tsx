@@ -8,19 +8,25 @@ type KpiCardProps = {
   tone: "up" | "down";
 };
 
-export default function KpiCard({ icon, label, value, trend, tone }: KpiCardProps) {
+export default function KpiCard({
+  icon,
+  label,
+  value,
+  trend,
+  tone,
+}: KpiCardProps) {
   return (
-    <Card className="border border-slate-200 bg-white shadow-soft">
+    <Card className="border border-border bg-card shadow-soft">
       <CardContent className="flex items-center gap-4 px-5 py-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
           {icon}
         </div>
         <div className="flex-1">
-          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
             {label}
           </p>
           <div className="flex items-center gap-2">
-            <p className="text-2xl font-semibold text-slate-900">{value}</p>
+            <p className="text-2xl font-semibold text-foreground">{value}</p>
             <span
               className={
                 tone === "up"

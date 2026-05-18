@@ -174,7 +174,12 @@ const roleConfig: Record<
         "Stay on top of approvals, quarterly progress, and feedback with your personal performance workspace.",
     },
     kpis: [
-      { label: "Goals Completed", value: 3, trend: "+1 this month", tone: "up" },
+      {
+        label: "Goals Completed",
+        value: 3,
+        trend: "+1 this month",
+        tone: "up",
+      },
       { label: "Pending Reviews", value: 1, trend: "Due Jun 18", tone: "down" },
       { label: "Quarterly Score", value: "3.8", trend: "+0.3", tone: "up" },
       { label: "Team Progress", value: "78%", trend: "+6%", tone: "up" },
@@ -248,18 +253,35 @@ const roleConfig: Record<
     rolePanels: [
       {
         title: "Personal Goals",
-        items: ["3 goals on track", "1 draft waiting to submit", "1 pending approval"],
+        items: [
+          "3 goals on track",
+          "1 draft waiting to submit",
+          "1 pending approval",
+        ],
       },
       {
         title: "Quarterly Updates",
-        items: ["Q2 update 78% complete", "1 update due this week", "Last submitted May 12"],
+        items: [
+          "Q2 update 78% complete",
+          "1 update due this week",
+          "Last submitted May 12",
+        ],
       },
       {
         title: "Feedback",
-        items: ["1 manager comment unread", "2 peer kudos received", "0 pending requests"],
+        items: [
+          "1 manager comment unread",
+          "2 peer kudos received",
+          "0 pending requests",
+        ],
       },
     ],
-    quickActions: ["Create Goal", "Submit Update", "View My Goals", "Request Feedback"],
+    quickActions: [
+      "Create Goal",
+      "Submit Update",
+      "View My Goals",
+      "Request Feedback",
+    ],
     chartData: {
       quarterlyPerformance: [
         { name: "Jan", value: 62 },
@@ -288,7 +310,12 @@ const roleConfig: Record<
         "Review pending approvals, coach direct reports, and keep quarterly momentum visible across your org.",
     },
     kpis: [
-      { label: "Goals Completed", value: 24, trend: "+4 this week", tone: "up" },
+      {
+        label: "Goals Completed",
+        value: 24,
+        trend: "+4 this week",
+        tone: "up",
+      },
       { label: "Pending Reviews", value: 6, trend: "2 overdue", tone: "down" },
       { label: "Quarterly Score", value: "4.1", trend: "+0.2", tone: "up" },
       { label: "Team Progress", value: "87%", trend: "+3%", tone: "up" },
@@ -408,7 +435,12 @@ const roleConfig: Record<
         "Monitor org-wide metrics, audit activity, and export leadership-ready reports from one command center.",
     },
     kpis: [
-      { label: "Goals Completed", value: "1,284", trend: "+12% YoY", tone: "up" },
+      {
+        label: "Goals Completed",
+        value: "1,284",
+        trend: "+12% YoY",
+        tone: "up",
+      },
       { label: "Pending Reviews", value: 34, trend: "-8% vs Q1", tone: "up" },
       { label: "Quarterly Score", value: "3.9", trend: "+0.4", tone: "up" },
       { label: "Team Progress", value: "81%", trend: "+5%", tone: "up" },
@@ -482,15 +514,27 @@ const roleConfig: Record<
     rolePanels: [
       {
         title: "Organization Metrics",
-        items: ["1,284 active goals", "94% approvals on time", "22 teams active"],
+        items: [
+          "1,284 active goals",
+          "94% approvals on time",
+          "22 teams active",
+        ],
       },
       {
         title: "Exports & Reports",
-        items: ["12 exports this week", "4 scheduled reports", "Board deck ready"],
+        items: [
+          "12 exports this week",
+          "4 scheduled reports",
+          "Board deck ready",
+        ],
       },
       {
         title: "Audit Summary",
-        items: ["28 policy changes", "0 critical flags", "Full trail available"],
+        items: [
+          "28 policy changes",
+          "0 critical flags",
+          "Full trail available",
+        ],
       },
     ],
     quickActions: [

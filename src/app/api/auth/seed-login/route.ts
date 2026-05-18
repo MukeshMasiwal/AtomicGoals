@@ -14,14 +14,11 @@ export async function POST(request: Request) {
     const email = body.email?.trim().toLowerCase();
 
     if (!email) {
-      return Response.json(
-        { error: "Email is required." },
-        { status: 400 }
-      );
+      return Response.json({ error: "Email is required." }, { status: 400 });
     }
 
     await connectDB();
-    
+
     // Find the seed user
     const user = await User.findOne({ email }).lean<{
       _id: { toString(): string };
@@ -32,7 +29,10 @@ export async function POST(request: Request) {
     }>();
 
     if (!user) {
-      return Response.json({ error: "Seed user not found. Did you run the seed script?" }, { status: 404 });
+      return Response.json(
+        { error: "Seed user not found. Did you run the seed script?" },
+        { status: 404 },
+      );
     }
 
     // Auto-authenticate without OTP checks

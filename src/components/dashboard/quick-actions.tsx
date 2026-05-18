@@ -1,13 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  ArrowUpRight,
-  FileDown,
-  Plus,
-  RefreshCw,
-  Users,
-} from "lucide-react";
+import { ArrowUpRight, FileDown, Plus, RefreshCw, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +27,7 @@ type QuickActionsProps = {
 
 export default function QuickActions({ actions }: QuickActionsProps) {
   return (
-    <Card className="border border-slate-200 bg-white shadow-soft">
+    <Card className="border border-border bg-card shadow-soft">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg">Quick Actions</CardTitle>
       </CardHeader>
@@ -50,15 +44,15 @@ export default function QuickActions({ actions }: QuickActionsProps) {
             >
               <Button
                 variant="outline"
-                className="h-auto w-full justify-between rounded-xl border-slate-200 px-4 py-3.5 text-left font-medium hover:border-primary/30 hover:bg-primary/5"
+                className="h-auto w-full justify-between rounded-xl border-border px-4 py-3.5 text-left font-medium hover:border-primary/30 hover:bg-primary/5"
               >
                 <span className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
                     <Icon className="h-4 w-4 text-primary" />
                   </span>
                   {action}
                 </span>
-                <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400" />
+                <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" />
               </Button>
             </motion.div>
           );

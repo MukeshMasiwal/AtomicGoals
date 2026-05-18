@@ -50,7 +50,13 @@ const navItems: NavItem[] = [
     label: "Team",
     href: "/dashboard/team",
     icon: Users,
-    roles: ["manager", "admin"],
+    roles: ["employee", "manager", "admin"],
+  },
+  {
+    label: "Admin Panel",
+    href: "/dashboard/users",
+    icon: ShieldCheck,
+    roles: ["admin"],
   },
   {
     label: "Analytics",
@@ -92,8 +98,8 @@ export default function Sidebar({
   return (
     <aside
       className={cn(
-        "flex h-screen w-64 flex-col gap-6 border-r border-slate-200/80 bg-white px-4 py-6 shadow-soft transition-all duration-300",
-        collapsed && "w-[88px] px-3"
+        "flex h-screen w-64 flex-col gap-6 border-r border-border/80 bg-card px-4 py-6 shadow-soft transition-all duration-300",
+        collapsed && "w-[88px] px-3",
       )}
     >
       <div className="flex items-center px-2 py-2">
@@ -114,15 +120,17 @@ export default function Sidebar({
               onClick={onClose}
               title={collapsed ? item.label : undefined}
               className={cn(
-                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900",
+                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/80 transition-all hover:bg-muted hover:text-foreground",
                 isActive &&
-                  "bg-primary/10 text-primary shadow-sm shadow-primary/5"
+                  "bg-primary/10 text-primary shadow-sm shadow-primary/5",
               )}
             >
               <Icon
                 className={cn(
                   "h-4 w-4 shrink-0 transition-colors",
-                  isActive ? "text-primary" : "text-slate-500 group-hover:text-slate-700"
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground group-hover:text-slate-700",
                 )}
               />
               {!collapsed ? <span>{item.label}</span> : null}
@@ -137,7 +145,7 @@ export default function Sidebar({
           void handleLogout();
           onClose?.();
         }}
-        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
       >
         <LogOut className="h-4 w-4" />
         {!collapsed ? <span>Logout</span> : null}
@@ -147,7 +155,7 @@ export default function Sidebar({
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="mt-2 hidden items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-100 lg:flex"
+          className="mt-2 hidden items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:bg-muted lg:flex"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (

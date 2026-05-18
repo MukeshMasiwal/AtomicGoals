@@ -34,31 +34,33 @@ function GoalCard({ goal }: { goal: GoalItem }) {
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
+      className="rounded-xl border border-border bg-card p-4 shadow-sm transition hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="font-medium text-slate-900">{goal.title}</p>
-        <Badge variant={statusToVariant[goal.status] ?? "slate"}>{goal.status}</Badge>
+        <p className="font-medium text-foreground">{goal.title}</p>
+        <Badge variant={statusToVariant[goal.status] ?? "slate"}>
+          {goal.status}
+        </Badge>
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-500">
+      <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-muted-foreground">
         <div>
-          <span className="block text-slate-400">Weight</span>
+          <span className="block text-muted-foreground">Weight</span>
           <span className="font-medium text-slate-700">{goal.weight}</span>
         </div>
         <div>
-          <span className="block text-slate-400">Deadline</span>
+          <span className="block text-muted-foreground">Deadline</span>
           <span className="font-medium text-slate-700">{goal.deadline}</span>
         </div>
       </div>
       <div className="mt-4 space-y-2">
         <div className="flex justify-between text-xs">
-          <span className="text-slate-500">Progress</span>
+          <span className="text-muted-foreground">Progress</span>
           <span className="font-semibold text-slate-700">{goal.progress}%</span>
         </div>
         <Progress value={goal.progress} />
       </div>
-      <p className="mt-3 text-xs text-slate-400">
-        Approval: <span className="text-slate-600">{goal.approval}</span>
+      <p className="mt-3 text-xs text-muted-foreground">
+        Approval: <span className="text-foreground/80">{goal.approval}</span>
       </p>
     </motion.div>
   );
@@ -67,9 +69,11 @@ function GoalCard({ goal }: { goal: GoalItem }) {
 export default function GoalsOverview({ goals }: GoalsOverviewProps) {
   if (goals.length === 0) {
     return (
-      <Card className="border border-dashed border-slate-200 bg-white p-10 text-center shadow-soft">
-        <p className="text-sm font-medium text-slate-600">No goals yet</p>
-        <p className="mt-1 text-xs text-slate-400">Create your first goal to get started.</p>
+      <Card className="border border-dashed border-border bg-card p-10 text-center shadow-soft">
+        <p className="text-sm font-medium text-foreground/80">No goals yet</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Create your first goal to get started.
+        </p>
       </Card>
     );
   }
@@ -82,7 +86,7 @@ export default function GoalsOverview({ goals }: GoalsOverviewProps) {
         ))}
       </div>
 
-      <Card className="hidden border border-slate-200 bg-white shadow-soft md:block">
+      <Card className="hidden border border-border bg-card shadow-soft md:block">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">Active Goals</CardTitle>
         </CardHeader>
@@ -102,9 +106,9 @@ export default function GoalsOverview({ goals }: GoalsOverviewProps) {
               {goals.map((goal) => (
                 <TableRow
                   key={goal.id}
-                  className="group transition-colors hover:bg-slate-50/80"
+                  className="group transition-colors hover:bg-muted/30"
                 >
-                  <TableCell className="font-medium text-slate-900">
+                  <TableCell className="font-medium text-foreground">
                     {goal.title}
                   </TableCell>
                   <TableCell>
@@ -112,23 +116,28 @@ export default function GoalsOverview({ goals }: GoalsOverviewProps) {
                       {goal.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-slate-600">{goal.weight}</TableCell>
+                  <TableCell className="text-foreground/80">
+                    {goal.weight}
+                  </TableCell>
                   <TableCell>
                     <div className="space-y-2">
                       <Progress value={goal.progress} className="h-2" />
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-muted-foreground">
                         {goal.progress}% complete
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-slate-600">{goal.deadline}</TableCell>
+                  <TableCell className="text-foreground/80">
+                    {goal.deadline}
+                  </TableCell>
                   <TableCell>
                     <span
                       className={cn(
                         "text-sm",
-                        goal.approval.includes("Awaiting") || goal.approval.includes("pending")
+                        goal.approval.includes("Awaiting") ||
+                          goal.approval.includes("pending")
                           ? "font-medium text-amber-600"
-                          : "text-slate-600"
+                          : "text-foreground/80",
                       )}
                     >
                       {goal.approval}

@@ -29,14 +29,12 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function verifyPassword(
   password: string,
-  hash: string
+  hash: string,
 ): Promise<boolean> {
   return bcrypt.compare(password, hash);
 }
 
-export async function createSessionToken(
-  user: SessionUser
-): Promise<string> {
+export async function createSessionToken(user: SessionUser): Promise<string> {
   return new SignJWT({
     email: user.email,
     name: user.name,
@@ -51,7 +49,7 @@ export async function createSessionToken(
 }
 
 export async function verifySessionToken(
-  token: string
+  token: string,
 ): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());

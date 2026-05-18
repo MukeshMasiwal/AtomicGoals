@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { getSessionFromCookies, setSessionCookie, createSessionToken } from "@/lib/auth";
+import {
+  getSessionFromCookies,
+  setSessionCookie,
+  createSessionToken,
+} from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
 
@@ -10,12 +14,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { firstName, lastName, jobTitle, department } = await req.json();
+    const { firstName, lastName, jobTitle, department, manager, team } =
+      await req.json();
 
     if (!firstName || !lastName || !jobTitle) {
       return NextResponse.json(
         { error: "First Name, Last Name, and Job Title are required." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -30,9 +35,11 @@ export async function POST(req: Request) {
         lastName,
         jobTitle,
         department: department || "",
+        manager,
+        team,
         onboardingCompleted: true,
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedUser) {
@@ -46,7 +53,7 @@ export async function POST(req: Request) {
       role: updatedUser.role,
       department: updatedUser.department,
     });
-    
+
     await setSessionCookie(newToken);
 
     return NextResponse.json({ success: true });
@@ -54,7 +61,7 @@ export async function POST(req: Request) {
     console.error("Onboarding error:", error);
     return NextResponse.json(
       { error: "Failed to complete onboarding." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

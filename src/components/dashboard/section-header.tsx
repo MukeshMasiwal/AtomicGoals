@@ -14,10 +14,12 @@ export default function SectionHeader({
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
         {eyebrow}
       </p>
-      <h2 className="text-2xl font-semibold text-slate-900 md:text-3xl">
+      <h2 className="text-2xl font-semibold text-foreground md:text-3xl">
         {title}
       </h2>
-      {subtitle ? <p className="text-sm text-slate-500">{subtitle}</p> : null}
+      {subtitle ? (
+        <p className="text-sm text-muted-foreground">{subtitle}</p>
+      ) : null}
     </div>
   );
 }

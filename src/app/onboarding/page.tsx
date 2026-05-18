@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
@@ -27,6 +27,33 @@ export default function OnboardingPage() {
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
 
+  const [managers, setManagers] = useState<
+    { _id: string; name: string; department: string }[]
+  >([]);
+  const [teams, setTeams] = useState<
+    { _id: string; name: string; department: string }[]
+  >([]);
+  const [selectedManager, setSelectedManager] = useState("");
+  const [selectedTeam, setSelectedTeam] = useState("");
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/onboarding/data");
+        if (res.ok) {
+          const data = await res.json();
+          setManagers(data.managers || []);
+          setTeams(data.teams || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch onboarding data", error);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const availableTeams = teams.filter((t) => t.department === department);
+
   async function handleOnboarding(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!firstName || !lastName || !jobTitle) return;
@@ -38,7 +65,14 @@ export default function OnboardingPage() {
       const response = await fetch("/api/user/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, jobTitle, department }),
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          jobTitle,
+          department,
+          manager: selectedManager,
+          team: selectedTeam,
+        }),
       });
 
       const data = await response.json();
@@ -51,7 +85,7 @@ export default function OnboardingPage() {
 
       setStatus("success");
       setMessage("Profile setup complete! Redirecting to dashboard...");
-      
+
       setTimeout(() => {
         router.push("/dashboard");
         router.refresh();
@@ -70,7 +104,7 @@ export default function OnboardingPage() {
         transition={{ duration: 0.4 }}
         className="w-full max-w-lg"
       >
-        <Card className="border-slate-200/60 shadow-xl bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800">
+        <Card className="border-border/60 shadow-xl bg-card/80 backdrop-blur-xl ">
           <CardHeader className="space-y-4 pb-6 flex flex-col items-center text-center">
             <Logo className="mb-2" />
             <div className="space-y-1">
@@ -141,8 +175,11 @@ export default function OnboardingPage() {
                 <select
                   id="department"
                   value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:ring-offset-slate-950 dark:placeholder:text-slate-400 dark:focus-visible:ring-slate-300"
+                  onChange={(e) => {
+                    setDepartment(e.target.value);
+                    setSelectedTeam("");
+                  }}
+                  className="flex h-10 w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:ring-offset-slate-950 dark:placeholder:text-muted-foreground dark:focus-visible:ring-slate-300"
                   disabled={status === "loading" || status === "success"}
                 >
                   <option value="Engineering">Engineering</option>
@@ -158,10 +195,62 @@ export default function OnboardingPage() {
                 </select>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="manager">Manager</Label>
+                  <select
+                    id="manager"
+                    value={selectedManager}
+                    onChange={(e) => setSelectedManager(e.target.value)}
+                    required
+                    className="flex h-10 w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300"
+                    disabled={status === "loading" || status === "success"}
+                  >
+                    <option value="" disabled>
+                      Select Manager
+                    </option>
+                    {managers.map((m) => (
+                      <option key={m._id} value={m._id}>
+                        {m.name} ({m.department})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="team">Team</Label>
+                  <select
+                    id="team"
+                    value={selectedTeam}
+                    onChange={(e) => setSelectedTeam(e.target.value)}
+                    required
+                    className="flex h-10 w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300"
+                    disabled={status === "loading" || status === "success"}
+                  >
+                    <option value="" disabled>
+                      Select Team
+                    </option>
+                    {availableTeams.map((t) => (
+                      <option key={t._id} value={t._id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               <Button
                 type="submit"
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
-                disabled={status === "loading" || status === "success" || !firstName || !lastName || !jobTitle}
+                disabled={
+                  status === "loading" ||
+                  status === "success" ||
+                  !firstName ||
+                  !lastName ||
+                  !jobTitle ||
+                  !selectedManager ||
+                  !selectedTeam
+                }
               >
                 {status === "loading" ? (
                   <>

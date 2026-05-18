@@ -17,7 +17,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 
-export default function ResetPasswordPage({ params }: { params: Promise<{ token: string }> }) {
+export default function ResetPasswordPage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
   const resolvedParams = use(params);
   const router = useRouter();
   const [password, setPassword] = useState("");
@@ -45,9 +49,9 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          token: resolvedParams.token, 
-          password 
+        body: JSON.stringify({
+          token: resolvedParams.token,
+          password,
         }),
       });
 
@@ -76,7 +80,7 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
         transition={{ duration: 0.4 }}
         className="w-full max-w-md"
       >
-        <Card className="border-slate-200/60 shadow-xl bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800">
+        <Card className="border-border/60 shadow-xl bg-card/80 backdrop-blur-xl ">
           <CardHeader className="space-y-1 pb-6">
             <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center mb-4">
               <KeyRound className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
@@ -88,16 +92,18 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
               Your new password must be different from previous used passwords.
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             {success ? (
               <div className="space-y-4">
                 <div className="p-4 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-sm dark:bg-emerald-900/20 dark:border-emerald-800/30 dark:text-emerald-400">
-                  <p className="font-semibold mb-1">Password updated successfully!</p>
+                  <p className="font-semibold mb-1">
+                    Password updated successfully!
+                  </p>
                   <p>Redirecting you to the login page...</p>
                 </div>
-                <Button 
-                  onClick={() => router.push("/login")} 
+                <Button
+                  onClick={() => router.push("/login")}
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
                 >
                   Go to login now
@@ -110,7 +116,7 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
                     {error}
                   </div>
                 )}
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="password">New Password</Label>
                   <div className="relative">
@@ -126,9 +132,13 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground/80 focus:outline-none"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -148,9 +158,9 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
                   </div>
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-6" 
+                <Button
+                  type="submit"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-6"
                   disabled={isLoading || !password || !confirmPassword}
                 >
                   {isLoading ? (

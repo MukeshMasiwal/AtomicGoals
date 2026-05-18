@@ -8,11 +8,17 @@ export async function POST(request: Request) {
     const { token, password } = await request.json();
 
     if (!token || !password) {
-      return Response.json({ error: "Token and new password are required" }, { status: 400 });
+      return Response.json(
+        { error: "Token and new password are required" },
+        { status: 400 },
+      );
     }
 
     if (password.length < 8) {
-      return Response.json({ error: "Password must be at least 8 characters long" }, { status: 400 });
+      return Response.json(
+        { error: "Password must be at least 8 characters long" },
+        { status: 400 },
+      );
     }
 
     await connectDB();
@@ -24,7 +30,10 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      return Response.json({ error: "Invalid or expired reset token" }, { status: 400 });
+      return Response.json(
+        { error: "Invalid or expired reset token" },
+        { status: 400 },
+      );
     }
 
     // Set new password and clear token fields

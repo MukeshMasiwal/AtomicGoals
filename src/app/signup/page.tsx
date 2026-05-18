@@ -70,7 +70,7 @@ export default function SignupPage() {
         transition={{ duration: 0.4 }}
         className="w-full max-w-md"
       >
-        <Card className="border-slate-200/60 shadow-xl bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800">
+        <Card className="border-border/60 shadow-xl bg-card/80 backdrop-blur-xl ">
           <CardHeader className="space-y-4 pb-6 flex flex-col items-center text-center">
             <Logo className="mb-2" />
             <div className="space-y-1">
@@ -82,7 +82,7 @@ export default function SignupPage() {
               </CardDescription>
             </div>
           </CardHeader>
-          
+
           <CardContent>
             <form onSubmit={handleSignup} className="space-y-4">
               {status === "error" && (
@@ -139,9 +139,9 @@ export default function SignupPage() {
                 />
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-2" 
+              <Button
+                type="submit"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-2"
                 disabled={status === "loading" || !name || !email || !password}
               >
                 {status === "loading" ? (
@@ -154,16 +154,22 @@ export default function SignupPage() {
                 )}
               </Button>
             </form>
-            <div className="mt-6 text-center text-sm text-slate-500">
+            <div className="mt-6 text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link href="/login" className="text-indigo-600 hover:underline dark:text-indigo-400">
+              <Link
+                href="/login"
+                className="text-indigo-600 hover:underline dark:text-indigo-400"
+              >
                 Log in
               </Link>
             </div>
           </CardContent>
 
-          <CardFooter className="pt-2 text-center text-sm flex flex-col gap-2 border-t border-slate-100 dark:border-slate-800 mt-4">
-            <Link href="/" className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <CardFooter className="pt-2 text-center text-sm flex flex-col gap-2 border-t border-slate-100 mt-4">
+            <Link
+              href="/"
+              className="text-muted-foreground hover:text-foreground/80 dark:hover:text-slate-200"
+            >
               Back to home
             </Link>
           </CardFooter>

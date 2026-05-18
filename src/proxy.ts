@@ -5,7 +5,15 @@ const SESSION_COOKIE = "goaltrack_session";
 
 const publicPaths = ["/", "/login", "/signup", "/forgot-password"];
 const publicPrefixes = ["/reset-password"];
-const publicApiPrefixes = ["/api/auth/login", "/api/auth/signup", "/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/send-otp", "/api/auth/verify-otp", "/api/auth/seed-login"];
+const publicApiPrefixes = [
+  "/api/auth/login",
+  "/api/auth/signup",
+  "/api/auth/forgot-password",
+  "/api/auth/reset-password",
+  "/api/auth/send-otp",
+  "/api/auth/verify-otp",
+  "/api/auth/seed-login",
+];
 
 function isPublicPath(pathname: string): boolean {
   if (publicPaths.includes(pathname)) {
@@ -22,7 +30,10 @@ async function getSessionPayload(token: string) {
   if (!secret) return null;
 
   try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret));
+    const { payload } = await jwtVerify(
+      token,
+      new TextEncoder().encode(secret),
+    );
     return payload as { role?: string };
   } catch {
     return null;
@@ -48,7 +59,10 @@ export async function proxy(request: NextRequest) {
   const isPublic = isPublicPath(pathname);
 
   // If user is authenticated and trying to access login/signup, redirect to dashboard
-  if (isAuthenticated && (pathname === "/login" || pathname === "/signup" || pathname === "/")) {
+  if (
+    isAuthenticated &&
+    (pathname === "/login" || pathname === "/signup" || pathname === "/")
+  ) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

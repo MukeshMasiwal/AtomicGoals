@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
         transition={{ duration: 0.4 }}
         className="w-full max-w-md"
       >
-        <Card className="border-slate-200/60 shadow-xl bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800">
+        <Card className="border-border/60 shadow-xl bg-card/80 backdrop-blur-xl ">
           <CardHeader className="space-y-1 pb-6">
             <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center mb-4">
               <Mail className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
@@ -65,17 +65,22 @@ export default function ForgotPasswordPage() {
               Reset password
             </CardTitle>
             <CardDescription className="text-base">
-              Enter your email address and we'll send you a link to reset your password.
+              Enter your email address and we'll send you a link to reset your
+              password.
             </CardDescription>
           </CardHeader>
-          
+
           {isSent ? (
             <CardContent className="space-y-4">
               <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/30 flex gap-3 text-emerald-800 dark:text-emerald-300">
                 <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
                 <div className="text-sm">
                   <p className="font-semibold mb-1">Check your inbox</p>
-                  <p>We've sent a password reset link to <span className="font-medium">{email}</span>. It will expire in 15 minutes.</p>
+                  <p>
+                    We've sent a password reset link to{" "}
+                    <span className="font-medium">{email}</span>. It will expire
+                    in 15 minutes.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -88,7 +93,9 @@ export default function ForgotPasswordPage() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-slate-600 dark:text-slate-300">Email address</Label>
+                  <Label htmlFor="email" className="text-foreground/80 ">
+                    Email address
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -100,9 +107,9 @@ export default function ForgotPasswordPage() {
                     disabled={isLoading}
                   />
                 </div>
-                <Button 
-                  type="submit" 
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" 
+                <Button
+                  type="submit"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
                   disabled={isLoading || !email}
                 >
                   {isLoading ? (
@@ -119,9 +126,9 @@ export default function ForgotPasswordPage() {
           )}
 
           <CardFooter className="pt-2 text-center text-sm">
-            <Link 
-              href="/login" 
-              className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors inline-flex items-center mx-auto"
+            <Link
+              href="/login"
+              className="text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-white transition-colors inline-flex items-center mx-auto"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to login

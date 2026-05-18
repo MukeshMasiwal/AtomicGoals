@@ -48,7 +48,11 @@ export async function POST(request: Request) {
     console.log(`[AUTH] Generated OTP for ${email}: ${otp}`);
 
     // Attempt to send email
-    if (process.env.EMAIL_SERVER && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    if (
+      process.env.EMAIL_SERVER &&
+      process.env.EMAIL_USER &&
+      process.env.EMAIL_PASS
+    ) {
       try {
         const transporter = nodemailer.createTransport({
           host: process.env.EMAIL_SERVER,
@@ -61,33 +65,33 @@ export async function POST(request: Request) {
         });
 
         const senderEmail = process.env.EMAIL_USER;
-        
+
         const htmlTemplate = `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc; border-radius: 12px;">
-          <div style="background-color: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); text-align: center;">
-            <h1 style="color: #4f46e5; margin-bottom: 8px; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">AtomicGoals</h1>
-            <h2 style="color: #0f172a; font-size: 20px; font-weight: 600; margin-top: 0; margin-bottom: 24px;">Your Verification Code</h2>
-            
-            <p style="color: #475569; font-size: 16px; margin-bottom: 24px; line-height: 1.5;">
-              You requested to sign in to your AtomicGoals account. Please use the verification code below to complete your sign-in request.
-            </p>
-            
-            <div style="background-color: #f1f5f9; border-radius: 8px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
-              <span style="font-family: monospace; font-size: 32px; font-weight: 700; color: #0f172a; letter-spacing: 0.25em;">${otp}</span>
-            </div>
-            
-            <p style="color: #64748b; font-size: 14px; margin-bottom: 32px;">
-              This code will expire in <strong>10 minutes</strong>.
-            </p>
-            
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin-bottom: 24px;" />
-            
-            <p style="color: #94a3b8; font-size: 12px; line-height: 1.5;">
-              If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.
-            </p>
-          </div>
-        </div>
-        `;
+ <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc; border-radius: 12px;">
+ <div style="background-color: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); text-align: center;">
+ <h1 style="color: #4f46e5; margin-bottom: 8px; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">AtomicGoals</h1>
+ <h2 style="color: #0f172a; font-size: 20px; font-weight: 600; margin-top: 0; margin-bottom: 24px;">Your Verification Code</h2>
+ 
+ <p style="color: #475569; font-size: 16px; margin-bottom: 24px; line-height: 1.5;">
+ You requested to sign in to your AtomicGoals account. Please use the verification code below to complete your sign-in request.
+ </p>
+ 
+ <div style="background-color: #f1f5f9; border-radius: 8px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
+ <span style="font-family: monospace; font-size: 32px; font-weight: 700; color: #0f172a; letter-spacing: 0.25em;">${otp}</span>
+ </div>
+ 
+ <p style="color: #64748b; font-size: 14px; margin-bottom: 32px;">
+ This code will expire in <strong>10 minutes</strong>.
+ </p>
+ 
+ <hr style="border: none; border-top: 1px solid #e2e8f0; margin-bottom: 24px;" />
+ 
+ <p style="color: #94a3b8; font-size: 12px; line-height: 1.5;">
+ If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.
+ </p>
+ </div>
+ </div>
+ `;
 
         const textTemplate = `Your AtomicGoals verification code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you didn't request this code, you can safely ignore this email.`;
 

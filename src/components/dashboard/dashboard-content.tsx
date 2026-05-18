@@ -8,8 +8,10 @@ const AnalyticsSection = dynamic(
   () => import("@/components/dashboard/analytics-section"),
   {
     ssr: false,
-    loading: () => <div className="h-[300px] w-full animate-pulse bg-slate-100 rounded-xl" />,
-  }
+    loading: () => (
+      <div className="h-[300px] w-full animate-pulse bg-muted rounded-xl" />
+    ),
+  },
 );
 import GoalsOverview from "@/components/dashboard/goals-overview";
 import HeroSection from "@/components/dashboard/hero-section";

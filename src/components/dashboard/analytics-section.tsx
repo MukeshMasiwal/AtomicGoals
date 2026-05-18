@@ -16,7 +16,7 @@ export default function AnalyticsSection({
 }: AnalyticsSectionProps) {
   return (
     <div className="grid gap-4 lg:grid-cols-3">
-      <Card className="border border-slate-200 bg-white shadow-soft lg:col-span-2">
+      <Card className="border border-border bg-card shadow-soft lg:col-span-2">
         <CardHeader>
           <CardTitle>Quarterly Performance</CardTitle>
         </CardHeader>
@@ -24,7 +24,7 @@ export default function AnalyticsSection({
           <QuarterlyLineChart data={quarterlyPerformance} />
         </CardContent>
       </Card>
-      <Card className="border border-slate-200 bg-white shadow-soft">
+      <Card className="border border-border bg-card shadow-soft">
         <CardHeader>
           <CardTitle>Goal Completion</CardTitle>
         </CardHeader>
@@ -32,7 +32,7 @@ export default function AnalyticsSection({
           <GoalCompletionChart data={goalCompletion} />
         </CardContent>
       </Card>
-      <Card className="border border-slate-200 bg-white shadow-soft lg:col-span-3">
+      <Card className="border border-border bg-card shadow-soft lg:col-span-3">
         <CardHeader>
           <CardTitle>Department Comparison</CardTitle>
         </CardHeader>

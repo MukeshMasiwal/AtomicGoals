@@ -8,7 +8,7 @@ const auditLogSchema = new Schema(
     targetId: { type: String, default: "" },
     metadata: { type: Schema.Types.Mixed, default: {} },
   },
-  { timestamps: true, collection: "audit_logs" }
+  { timestamps: true, collection: "audit_logs" },
 );
 
 auditLogSchema.index({ createdAt: -1 });

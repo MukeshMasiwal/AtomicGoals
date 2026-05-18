@@ -7,7 +7,8 @@ import { User } from "@/models/User";
 export async function GET() {
   try {
     const session = await getSessionFromCookies();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     await connectDB();
     const teams = await Team.find()
@@ -18,7 +19,10 @@ export async function GET() {
     return NextResponse.json({ teams });
   } catch (error) {
     console.error("Fetch teams error:", error);
-    return NextResponse.json({ error: "Failed to fetch teams" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch teams" },
+      { status: 500 },
+    );
   }
 }
 
@@ -40,15 +44,15 @@ export async function POST(req: Request) {
 
     // Update users' team field
     if (members && members.length > 0) {
-      await User.updateMany(
-        { _id: { $in: members } },
-        { team: team._id }
-      );
+      await User.updateMany({ _id: { $in: members } }, { team: team._id });
     }
 
     return NextResponse.json({ success: true, team });
   } catch (error) {
     console.error("Create team error:", error);
-    return NextResponse.json({ error: "Failed to create team" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create team" },
+      { status: 500 },
+    );
   }
 }

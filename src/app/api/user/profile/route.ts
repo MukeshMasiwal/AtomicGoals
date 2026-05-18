@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { getSessionFromCookies, setSessionCookie, createSessionToken } from "@/lib/auth";
+import {
+  getSessionFromCookies,
+  setSessionCookie,
+  createSessionToken,
+} from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
 
@@ -15,7 +19,7 @@ export async function PUT(req: Request) {
     if (!firstName || !lastName || !jobTitle) {
       return NextResponse.json(
         { error: "First Name, Last Name, and Job Title are required." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -31,7 +35,7 @@ export async function PUT(req: Request) {
         jobTitle,
         department: department || "",
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedUser) {
@@ -45,7 +49,7 @@ export async function PUT(req: Request) {
       role: updatedUser.role,
       department: updatedUser.department,
     });
-    
+
     await setSessionCookie(newToken);
 
     return NextResponse.json({ success: true, user: updatedUser });
@@ -53,7 +57,7 @@ export async function PUT(req: Request) {
     console.error("Profile update error:", error);
     return NextResponse.json(
       { error: "Failed to update profile." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -67,7 +71,7 @@ export async function GET(req: Request) {
 
     await connectDB();
     const user = await User.findById(session.id).lean();
-    
+
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -77,7 +81,7 @@ export async function GET(req: Request) {
     console.error("Profile fetch error:", error);
     return NextResponse.json(
       { error: "Failed to fetch profile." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

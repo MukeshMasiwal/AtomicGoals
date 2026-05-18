@@ -6,7 +6,11 @@ type ProgressRingProps = {
   stroke?: number;
 };
 
-export default function ProgressRing({ value, size = 140, stroke = 12 }: ProgressRingProps) {
+export default function ProgressRing({
+  value,
+  size = 140,
+  stroke = 12,
+}: ProgressRingProps) {
   const normalizedRadius = (size - stroke) / 2;
   const circumference = normalizedRadius * 2 * Math.PI;
   const strokeDashoffset = circumference - (value / 100) * circumference;
@@ -34,7 +38,10 @@ export default function ProgressRing({ value, size = 140, stroke = 12 }: Progres
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={`${circumference} ${circumference}`}
-          style={{ strokeDashoffset, transition: "stroke-dashoffset 0.6s ease" }}
+          style={{
+            strokeDashoffset,
+            transition: "stroke-dashoffset 0.6s ease",
+          }}
           r={normalizedRadius}
           cx={center}
           cy={center}

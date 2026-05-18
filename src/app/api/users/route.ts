@@ -9,12 +9,20 @@ export async function GET() {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-
-
   try {
     await connectDB();
-    const users = await User.find()
-      .select("name email role department team createdAt")
+    const sessionUser = (await User.findById(user.id)
+      .select("department")
+      .lean()) as any;
+    let query = {};
+    if (user.role === "manager") {
+      query = { department: sessionUser?.department };
+    }
+
+    const users = await User.find(query)
+      .select(
+        "name email role department team manager verified onboardingCompleted createdAt employeeStatus",
+      )
       .sort({ createdAt: -1 })
       .lean();
 
@@ -26,6 +34,13 @@ export async function GET() {
         role: entry.role,
         department: entry.department,
         team: entry.team,
+        manager: entry.manager,
+        status: entry.employeeStatus || "Active",
+        accountStatus: entry.verified
+          ? entry.onboardingCompleted
+            ? "Active"
+            : "Onboarding"
+          : "Unverified",
         createdAt: entry.createdAt,
       })),
     });

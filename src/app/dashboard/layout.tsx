@@ -14,7 +14,7 @@ export default async function DashboardLayout({
   }
 
   await connectDB();
-  const dbUser = await User.findById(session.id).lean() as any;
+  const dbUser = (await User.findById(session.id).lean()) as any;
 
   if (dbUser && !dbUser.onboardingCompleted) {
     redirect("/onboarding");

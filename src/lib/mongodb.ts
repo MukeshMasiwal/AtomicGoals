@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-
 type MongooseCache = {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
@@ -34,7 +33,7 @@ export async function connectDB(): Promise<typeof mongoose> {
 
   if (!cache.promise) {
     cache.promise = mongoose
-      .connect(MONGODB_URI, { 
+      .connect(MONGODB_URI, {
         dbName: DB_NAME,
         serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
       })

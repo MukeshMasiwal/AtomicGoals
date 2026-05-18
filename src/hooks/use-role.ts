@@ -17,7 +17,7 @@ export function useRole() {
       params.set("role", nextRole);
       router.push(`/dashboard?${params.toString()}`);
     },
-    [router, searchParams]
+    [router, searchParams],
   );
 
   return { role, setRole };
