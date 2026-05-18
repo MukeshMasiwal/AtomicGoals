@@ -56,12 +56,43 @@ export default function GoalsClient({ user }: { user: any }) {
     title: "",
     description: "",
     numberOfTasks: 1,
+    goalWeightage: 10,
     deadline: "",
     team: "",
     assignedManager: "",
   });
   const [detailGoal, setDetailGoal] = useState<any>(null);
   const [formError, setFormError] = useState("");
+  const currentUserTeamId = user.team?._id || user.team || "";
+  const currentUserDepartment = user.department || "";
+
+  function isActiveGoal(goal: any) {
+    return goal.approvalStatus !== "Rejected" && goal.status !== "completed";
+  }
+
+  function canMutateGoal(goal: any) {
+    if (user.role === "admin") return true;
+
+    const goalTeamId = goal.team?._id || goal.team || "";
+    const goalManagerId = goal.assignedManager?._id || goal.assignedManager || "";
+    const creatorId = goal.creator?._id || goal.creator || "";
+    const assignedToIds = (goal.assignedTo || []).map((entry: any) => entry?._id || entry || "");
+    const contributingTeamIds = (goal.contributingTeams || []).map((entry: any) => entry?._id || entry || "");
+
+    if (user.role === "manager") {
+      return (
+        goalManagerId === user.id ||
+        goal.department === currentUserDepartment ||
+        goalTeamId === currentUserTeamId
+      );
+    }
+
+    if (goalTeamId) {
+      return goalTeamId === currentUserTeamId || contributingTeamIds.includes(currentUserTeamId);
+    }
+
+    return creatorId === user.id || assignedToIds.includes(user.id);
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -128,6 +159,21 @@ export default function GoalsClient({ user }: { user: any }) {
     });
   }, [goals, search, filterDepartment, filterStatus, filterManager]);
 
+  const activeEmployeeGoalCount = useMemo(() => {
+    if (user.role !== "employee") return 0;
+
+    return goals.filter((goal) => {
+      const goalTeamId = goal.team?._id || goal.team || "";
+      const creatorId = goal.creator?._id || goal.creator || "";
+      const assignedToIds = (goal.assignedTo || []).map((entry: any) => entry?._id || entry || "");
+
+      return (
+        isActiveGoal(goal) &&
+        (creatorId === user.id || assignedToIds.includes(user.id) || goalTeamId === currentUserTeamId)
+      );
+    }).length;
+  }, [goals, user.role, user.id, currentUserTeamId]);
+
   function getStatusDetails(status: string) {
     switch (status?.toLowerCase()) {
       case "completed":
@@ -185,6 +231,7 @@ export default function GoalsClient({ user }: { user: any }) {
       title: "",
       description: "",
       numberOfTasks: 1,
+      goalWeightage: 10,
       deadline: "",
       team: "",
       assignedManager: "",
@@ -199,6 +246,7 @@ export default function GoalsClient({ user }: { user: any }) {
       title: goal.title,
       description: goal.description || "",
       numberOfTasks: goal.numberOfTasks || 1,
+      goalWeightage: goal.goalWeightage ?? 10,
       deadline: goal.dueDate
         ? new Date(goal.dueDate).toISOString().split("T")[0]
         : "",
@@ -273,6 +321,42 @@ export default function GoalsClient({ user }: { user: any }) {
       setFormError("Deadline is required.");
       return;
     }
+    const parsedWeightage = Number(formData.goalWeightage || 0);
+    if (Number.isNaN(parsedWeightage)) {
+      setFormError("Goal weightage must be a number.");
+      return;
+    }
+    if (parsedWeightage < 10) {
+      setFormError("Each goal must have at least 10% weightage.");
+      return;
+    }
+    if (parsedWeightage > 100) {
+      setFormError("Goal weightage cannot exceed 100%.");
+      return;
+    }
+
+    if (user.role === "employee") {
+      const activeEmployeeGoals = goals.filter((goal) => {
+        const goalTeamId = goal.team?._id || goal.team || "";
+        const creatorId = goal.creator?._id || goal.creator || "";
+        const assignedToIds = (goal.assignedTo || []).map((entry: any) => entry?._id || entry || "");
+        return (
+          isActiveGoal(goal) &&
+          (creatorId === user.id || assignedToIds.includes(user.id) || goalTeamId === currentUserTeamId)
+        );
+      });
+
+      if (!editingGoal && activeEmployeeGoals.length >= 8) {
+        setFormError("Maximum 8 goals allowed per employee.");
+        return;
+      }
+
+      if (formData.team && currentUserTeamId && formData.team !== currentUserTeamId) {
+        setFormError("Employees can only create goals for their own team.");
+        return;
+      }
+    }
+
     const parsedDeadline = new Date(formData.deadline);
     const currentDeadline = editingGoal?.dueDate ? new Date(editingGoal.dueDate).toISOString().split("T")[0] : null;
 
@@ -293,6 +377,7 @@ export default function GoalsClient({ user }: { user: any }) {
     try {
       const payload = {
         ...formData,
+        goalWeightage: parsedWeightage,
         dueDate: formData.deadline
           ? new Date(formData.deadline).toISOString()
           : null,
@@ -369,6 +454,7 @@ export default function GoalsClient({ user }: { user: any }) {
           <div className="flex w-full gap-3 sm:w-auto">
             <Button
               onClick={handleOpenCreate}
+              disabled={user.role === "employee" && activeEmployeeGoalCount >= 8}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-sm"
             >
               <Plus className="h-4 w-4" /> Create Goal
@@ -523,14 +609,16 @@ export default function GoalsClient({ user }: { user: any }) {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => handleOpenEdit(goal, e)}
-                              className="text-muted-foreground hover:text-indigo-600"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                            {canMutateGoal(goal) ? (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => handleOpenEdit(goal, e)}
+                                className="text-muted-foreground hover:text-indigo-600"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            ) : null}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -597,6 +685,28 @@ export default function GoalsClient({ user }: { user: any }) {
                     className="bg-muted/50 "
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>
+                    Goal Weightage <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    type="number"
+                    min="10"
+                    max="100"
+                    step="1"
+                    value={formData.goalWeightage}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        goalWeightage: Math.max(10, Math.min(100, parseInt(e.target.value) || 10)),
+                      })
+                    }
+                    className="bg-muted/50 "
+                  />
+                  <p className="text-xs text-muted-foreground">Each goal must contribute at least 10% and all active goals should total 100%.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>
                     Deadline <span className="text-red-500">*</span>
@@ -762,6 +872,12 @@ export default function GoalsClient({ user }: { user: any }) {
                   <div className="text-sm text-muted-foreground">{detailGoal.status || "Not Started"}</div>
                 </div>
                 <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-foreground">Goal Weightage</h4>
+                  <div className="text-sm text-muted-foreground">
+                    {detailGoal.effectiveGoalWeightage ?? detailGoal.goalWeightage ?? 10}%
+                  </div>
+                </div>
+                <div className="space-y-1">
                   <h4 className="text-sm font-semibold text-foreground">Deadline</h4>
                   <div className="text-sm text-muted-foreground">
                     {detailGoal.dueDate
@@ -772,6 +888,12 @@ export default function GoalsClient({ user }: { user: any }) {
                 <div className="space-y-1">
                   <h4 className="text-sm font-semibold text-foreground">Tasks</h4>
                   <div className="text-sm text-muted-foreground">{detailGoal.numberOfTasks || 1} tasks planned</div>
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-foreground">Task Contribution</h4>
+                  <div className="text-sm text-muted-foreground">
+                    {detailGoal.taskContributionWeight ?? Math.round(((detailGoal.effectiveGoalWeightage ?? detailGoal.goalWeightage ?? 10) / Math.max(detailGoal.numberOfTasks || 1, 1)) * 10) / 10}% per task
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <h4 className="text-sm font-semibold text-foreground">Progress</h4>
@@ -785,6 +907,26 @@ export default function GoalsClient({ user }: { user: any }) {
                 <div className="space-y-1">
                   <h4 className="text-sm font-semibold text-foreground">Team</h4>
                   <div className="text-sm text-muted-foreground">{detailGoal.team?.name || "No Team"}</div>
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-foreground">Contribution Eligibility</h4>
+                  <div className="text-sm text-muted-foreground">
+                    {detailGoal.contributionPermissions?.includes("team-members")
+                      ? "Team members only"
+                      : "Restricted access"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/30 p-3">
+                <h4 className="text-sm font-semibold text-foreground mb-2">Validation Info</h4>
+                <div className="grid grid-cols-1 gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+                  <div>
+                    Contributing teams: {detailGoal.contributingTeams?.length ? detailGoal.contributingTeams.length : 1}
+                  </div>
+                  <div>
+                    Weighted contribution: {Math.round((detailGoal.progress || 0) * ((detailGoal.effectiveGoalWeightage ?? detailGoal.goalWeightage ?? 10) / 100))}%
+                  </div>
                 </div>
               </div>
 

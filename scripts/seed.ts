@@ -133,6 +133,9 @@ async function seed() {
         approvalStatus: "Pending Approval",
         status: "in-progress",
         progress: 10,
+        goalWeightage: 30,
+        contributionPercentage: 15,
+        contributingTeams: [fTeam._id],
         quarterlyTarget: "Q3 2026",
       });
       
@@ -148,6 +151,9 @@ async function seed() {
         approvalStatus: "Approved",
         status: "in-progress",
         progress: 50,
+        goalWeightage: 25,
+        contributionPercentage: 12.5,
+        contributingTeams: [teams.find(t => t.name === "Growth Team")._id],
         quarterlyTarget: "Q3 2026",
       });
 
@@ -168,6 +174,9 @@ async function seed() {
         approvalStatus: "Approved",
         status: "in-progress",
         progress: 20,
+        goalWeightage: 25,
+        contributionPercentage: 12.5,
+        contributingTeams: [teams.find(t => t.name === "Enterprise Sales")._id],
         quarterlyTarget: "Q3 2026",
       });
 
@@ -183,6 +192,9 @@ async function seed() {
         approvalStatus: "Approved",
         status: "completed",
         progress: 100,
+        goalWeightage: 20,
+        contributionPercentage: 10,
+        contributingTeams: [teams.find(t => t.name === "People Ops")._id],
         quarterlyTarget: "Q3 2026",
       });
       

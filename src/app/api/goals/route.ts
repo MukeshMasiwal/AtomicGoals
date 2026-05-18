@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSessionFromCookies } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
+import {
+  canEmployeeMutateGoal,
+  canManagerManageGoal,
+  calculateWeightedProgress,
+  normalizeGoalForResponse,
+  resolveEnterpriseGoalWeights,
+} from "@/lib/goal-enterprise";
 import { Goal } from "@/models/Goal";
 import { Team } from "@/models/Team";
 import { User } from "@/models/User";
@@ -51,7 +58,9 @@ export async function GET(req: Request) {
       .sort({ createdAt: -1 })
       .lean();
 
-    return NextResponse.json({ goals });
+    return NextResponse.json({
+      goals: goals.map((goal) => normalizeGoalForResponse(goal)),
+    });
   } catch (error) {
     console.error("Fetch goals error:", error);
     return NextResponse.json(
@@ -78,6 +87,7 @@ export async function POST(req: Request) {
       approvalStatus,
       assignedManager,
       numberOfTasks,
+      goalWeightage,
     } = await req.json();
 
     if (!dueDate) {
@@ -110,7 +120,98 @@ export async function POST(req: Request) {
       );
     }
 
+    const parsedGoalWeightage =
+      goalWeightage === undefined || goalWeightage === null || goalWeightage === ""
+        ? null
+        : Number(goalWeightage);
+
+    if (parsedGoalWeightage !== null) {
+      if (Number.isNaN(parsedGoalWeightage)) {
+        return NextResponse.json(
+          { error: "Goal weightage must be a number" },
+          { status: 400 },
+        );
+      }
+      if (parsedGoalWeightage < 10) {
+        return NextResponse.json(
+          { error: "Each goal must have at least 10% weightage." },
+          { status: 400 },
+        );
+      }
+      if (parsedGoalWeightage > 100) {
+        return NextResponse.json(
+          { error: "Goal weightage cannot exceed 100%." },
+          { status: 400 },
+        );
+      }
+    }
+
     await connectDB();
+
+    const creatorUser = (await User.findById(session.id)
+      .select("team department role")
+      .lean()) as any;
+    const targetTeam = team
+      ? ((await Team.findById(team).select("manager department members").lean()) as any)
+      : null;
+    const participantIds = new Set<string>(
+      (Array.isArray(assignedTo) && assignedTo.length > 0
+        ? assignedTo
+        : [session.id]
+      ).map((value: unknown) => String(value)),
+    );
+
+    const activeGoalQueries = Array.from(participantIds).map((participantId) => ({
+      $or: [{ creator: participantId }, { assignedTo: participantId }],
+      approvalStatus: { $ne: "Rejected" },
+      status: { $ne: "completed" },
+    }));
+
+    if (activeGoalQueries.length > 0) {
+      const participantGoals = await Goal.find({ $or: activeGoalQueries }).lean();
+      const validation = resolveEnterpriseGoalWeights([
+        ...participantGoals,
+        {
+          _id: "new-goal",
+          goalWeightage: parsedGoalWeightage ?? 10,
+          progress: progress ?? 0,
+          status: "not-started",
+          approvalStatus: "Pending Approval",
+        },
+      ]);
+
+      if (!validation.valid) {
+        return NextResponse.json({ error: validation.error }, { status: 400 });
+      }
+
+      if (participantGoals.length >= 8) {
+        return NextResponse.json(
+          { error: "Maximum 8 goals allowed per employee." },
+          { status: 400 },
+        );
+      }
+    }
+
+    if (session.role === "employee" && team && creatorUser?.team && String(creatorUser.team) !== String(team)) {
+      return NextResponse.json(
+        { error: "Employees can only create goals for their own team." },
+        { status: 403 },
+      );
+    }
+
+    if (targetTeam && assignedManager && String(targetTeam.manager) !== String(assignedManager)) {
+      return NextResponse.json(
+        { error: "Assigned manager must belong to the selected team." },
+        { status: 400 },
+      );
+    }
+
+    if (session.role === "manager" && targetTeam && String(targetTeam.manager) !== session.id) {
+      return NextResponse.json(
+        { error: "Managers can only create goals for teams they manage." },
+        { status: 403 },
+      );
+    }
 
     // Approval logic based on roles
     let finalStatus =
@@ -135,6 +236,13 @@ export async function POST(req: Request) {
       dueDate: parsedDueDate,
       progress: progress || 0,
       numberOfTasks: numberOfTasks || 1,
+      goalWeightage: parsedGoalWeightage ?? 10,
+      contributionPercentage:
+        numberOfTasks && Number(numberOfTasks) > 0
+          ? Math.round(((parsedGoalWeightage ?? 10) / Number(numberOfTasks)) * 10) / 10
+          : parsedGoalWeightage ?? 10,
+      contributingTeams: team ? [team] : [],
+      contributionPermissions: ["team-members"],
       approvalStatus: finalStatus,
       assignedManager,
     };
@@ -145,8 +253,8 @@ export async function POST(req: Request) {
     const goal = await Goal.create(payload);
 
     // Notification logic
-    const creatorUser = await User.findById(session.id);
-    const creatorDept = creatorUser?.department || "No Department";
+    const creatorProfile = await User.findById(session.id);
+    const creatorDept = creatorProfile?.department || "No Department";
 
     const { createNotification, notifyAdmins } = await import("@/lib/notifications");
 
@@ -188,7 +296,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, goal });
+    return NextResponse.json({ success: true, goal: normalizeGoalForResponse(goal.toObject()) });
   } catch (error) {
     console.error("Create goal error:", error);
     return NextResponse.json(

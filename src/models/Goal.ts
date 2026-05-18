@@ -33,6 +33,13 @@ const goalSchema = new Schema(
     department: { type: String, default: "" },
     progress: { type: Number, default: 0, min: 0, max: 100 },
     numberOfTasks: { type: Number, default: 1, min: 1 },
+    goalWeightage: { type: Number, min: 0, max: 100 },
+    contributionPercentage: { type: Number, min: 0, max: 100 },
+    contributingTeams: [{ type: Schema.Types.ObjectId, ref: "Team" }],
+    contributionPermissions: {
+      type: [String],
+      default: ["team-members"],
+    },
     quarterlyTarget: { type: String, default: "" },
     actualAchievement: { type: String, default: "" },
     status: {
@@ -55,6 +62,7 @@ goalSchema.index({ creator: 1 });
 goalSchema.index({ assignedTo: 1 });
 goalSchema.index({ team: 1 });
 goalSchema.index({ assignedManager: 1 });
+goalSchema.index({ contributingTeams: 1 });
 
 export type GoalDocument = InferSchemaType<typeof goalSchema>;
 

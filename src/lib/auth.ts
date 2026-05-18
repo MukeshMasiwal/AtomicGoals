@@ -7,6 +7,18 @@ import type { Role, SessionUser } from "@/types";
 const SESSION_COOKIE = "goaltrack_session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
+function shouldUseSecureCookie(): boolean {
+  if (process.env.NODE_ENV === "development") {
+    return false;
+  }
+
+  if (process.env.VERCEL === "1") {
+    return true;
+  }
+
+  return process.env.NEXT_PUBLIC_APP_URL?.startsWith("https://") === true;
+}
+
 export type SessionPayload = {
   sub: string;
   email: string;
@@ -128,7 +140,7 @@ export async function setSessionCookie(token: string): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookie(),
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_MAX_AGE,

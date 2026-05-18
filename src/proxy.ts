@@ -1,5 +1,6 @@
 import { jwtVerify } from "jose";
 import { NextResponse, type NextRequest } from "next/server";
+import { resolveAuthRedirectPath } from "@/lib/auth";
 
 const SESSION_COOKIE = "goaltrack_session";
 
@@ -40,6 +41,13 @@ async function getSessionPayload(token: string) {
   }
 }
 
+function redirectTo(pathname: string, request: NextRequest) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  url.search = "";
+  return NextResponse.redirect(url);
+}
+
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -63,60 +71,43 @@ export default async function proxy(request: NextRequest) {
   const isOnboarding = pathname === "/onboarding";
   const isWaiting = pathname === "/waiting-approval";
   const isRejectedRoute = pathname === "/rejected";
+  const isDashboardRoute = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
   const isLogout = pathname === "/api/auth/logout" || pathname === "/logout";
 
-  if (isAuthenticated && !isLogout) {
-    const isApproved = session.approvalStatus === "Approved";
-    const isPending = session.approvalStatus === "Pending Approval";
-    const isRejected = session.approvalStatus === "Rejected";
-    const hasCompletedOnboarding = session.onboardingCompleted;
+  if (isAuthenticated && !isLogout && !pathname.startsWith("/api/")) {
+    const targetPath = resolveAuthRedirectPath({
+      approvalStatus:
+        session.approvalStatus === "Approved" ||
+        session.approvalStatus === "Rejected"
+          ? session.approvalStatus
+          : "Pending Approval",
+      onboardingCompleted: !!session.onboardingCompleted,
+    });
 
-    // Allow API requests to go through
-    if (!pathname.startsWith("/api/")) {
-      if (!hasCompletedOnboarding && !isOnboarding && pathname !== "/signup" && pathname !== "/") {
-        console.log(`[Middleware] Redirecting to /onboarding (Incomplete Onboarding)`);
-        return NextResponse.redirect(new URL("/onboarding", request.url));
-      }
-      
-      if (hasCompletedOnboarding && isPending && !isWaiting && pathname !== "/") {
-        console.log(`[Middleware] Redirecting to /waiting-approval (Pending)`);
-        return NextResponse.redirect(new URL("/waiting-approval", request.url));
-      }
-      
-      if (hasCompletedOnboarding && isRejected && !isRejectedRoute && pathname !== "/") {
-        console.log(`[Middleware] Redirecting to /rejected (Rejected)`);
-        return NextResponse.redirect(new URL("/rejected", request.url));
-      }
+    const isAuthEntryPath =
+      pathname === "/login" ||
+      pathname === "/signup" ||
+      pathname === "/forgot-password" ||
+      pathname.startsWith("/reset-password");
 
-      if (isApproved && (isOnboarding || isWaiting || isRejectedRoute || pathname === "/signup")) {
-        console.log(`[Middleware] Redirecting to /dashboard (Approved)`);
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
+    if (pathname === "/" && targetPath === "/dashboard") {
+      return redirectTo("/dashboard", request);
     }
 
-    // If user is authenticated and trying to access login/signup
-    if (pathname === "/login" || pathname === "/signup") {
-      if (!hasCompletedOnboarding) {
-        console.log(`[Middleware] Redirecting from ${pathname} to /onboarding`);
-        return NextResponse.redirect(new URL("/onboarding", request.url));
-      }
-      if (isPending) {
-        console.log(`[Middleware] Redirecting from ${pathname} to /waiting-approval`);
-        return NextResponse.redirect(new URL("/waiting-approval", request.url));
-      }
-      if (isRejected) {
-        console.log(`[Middleware] Redirecting from ${pathname} to /rejected`);
-        return NextResponse.redirect(new URL("/rejected", request.url));
-      }
-      console.log(`[Middleware] Redirecting from ${pathname} to /dashboard`);
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+    if (pathname === targetPath) {
+      return NextResponse.next();
     }
 
-    if (pathname === "/") {
-      if (isApproved) {
-        console.log(`[Middleware] Redirecting from / to /dashboard`);
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
+    if (isAuthEntryPath) {
+      return redirectTo(targetPath, request);
+    }
+
+    if (isDashboardRoute && targetPath !== "/dashboard") {
+      return redirectTo(targetPath, request);
+    }
+
+    if (isOnboarding || isWaiting || isRejectedRoute) {
+      return redirectTo(targetPath, request);
     }
   }
 

@@ -19,6 +19,8 @@ export default async function GoalsPage() {
     name: dbUser?.name || session.name,
     avatar: dbUser?.avatar || "",
     role: session.role,
+    team: dbUser?.team ? String(dbUser.team) : null,
+    department: dbUser?.department || "",
     roleLabel:
       session.role === "admin"
         ? "Administrator"

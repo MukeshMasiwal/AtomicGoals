@@ -44,8 +44,8 @@ function GoalCard({ goal }: { goal: GoalItem }) {
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-muted-foreground">
         <div>
-          <span className="block text-muted-foreground">Weight</span>
-          <span className="font-medium text-slate-700 dark:text-slate-300">{goal.weight}</span>
+          <span className="block text-muted-foreground">Weightage</span>
+          <span className="font-medium text-slate-700 dark:text-slate-300">{goal.weight || "10%"}</span>
         </div>
         <div>
           <span className="block text-muted-foreground">Deadline</span>
@@ -117,7 +117,7 @@ export default function GoalsOverview({ goals }: GoalsOverviewProps) {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-foreground/80">
-                    {goal.weight}
+                    {goal.weight || "10%"}
                   </TableCell>
                   <TableCell>
                     <div className="space-y-2">

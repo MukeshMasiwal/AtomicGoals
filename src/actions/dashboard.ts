@@ -1,6 +1,7 @@
 "use server";
 
 import { getSessionFromCookies } from "@/lib/auth";
+import { calculateWeightedProgress, normalizeGoalForResponse } from "@/lib/goal-enterprise";
 import { getDashboardData, type Role } from "@/lib/mock-data";
 import { connectDB } from "@/lib/mongodb";
 import { Goal } from "@/models/Goal";
@@ -55,13 +56,14 @@ export async function fetchDashboardData() {
       .sort({ updatedAt: -1 })
       .limit(8)
       .lean();
+    const normalizedGoals = goals.map((goal) => normalizeGoalForResponse(goal as any));
     const goalCount = await Goal.countDocuments(filter);
 
     const formattedGoals =
-      goals.length > 0
-        ? goals.map((goal) => ({
+      normalizedGoals.length > 0
+        ? normalizedGoals.map((goal) => ({
             id: String(goal._id),
-            title: goal.title,
+            title: goal.title || "Untitled Goal",
             status:
               goal.approvalStatus === "Approved"
                 ? ("Approved" as const)
@@ -70,7 +72,7 @@ export async function fetchDashboardData() {
                   : goal.approvalStatus === "Rejected"
                     ? ("Rejected" as const)
                     : ("Draft" as const),
-            weight: goal.priority || "Medium",
+            weight: `${goal.effectiveGoalWeightage ?? goal.goalWeightage ?? 10}%`,
             progress: goal.progress ?? 0,
             deadline: goal.dueDate
               ? new Date(goal.dueDate).toLocaleDateString("en-US", {
@@ -83,11 +85,8 @@ export async function fetchDashboardData() {
         : mock.goals;
 
     const avgProgress =
-      goals.length > 0
-        ? Math.round(
-            goals.reduce((sum, goal) => sum + (goal.progress ?? 0), 0) /
-              goals.length,
-          )
+      normalizedGoals.length > 0
+        ? calculateWeightedProgress(normalizedGoals).weightedProgress
         : mock.progress;
 
     // Build pending actions from Pending Approval goals
@@ -151,10 +150,10 @@ export async function fetchDashboardData() {
       progress: avgProgress,
       kpis: dynamicKpis,
       pendingActions:
-        goals.length > 0 ? dbPendingActions : mock.pendingActions,
+        normalizedGoals.length > 0 ? dbPendingActions : mock.pendingActions,
       activityFeed:
-        goals.length > 0 ? dbActivityFeed : mock.activityFeed,
-      source: goals.length > 0 ? ("database" as const) : ("mock" as const),
+        normalizedGoals.length > 0 ? dbActivityFeed : mock.activityFeed,
+      source: normalizedGoals.length > 0 ? ("database" as const) : ("mock" as const),
     };
   } catch (err) {
     console.error("Dashboard fetch error:", err);

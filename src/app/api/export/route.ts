@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionFromCookies } from "@/lib/auth";
+import { normalizeGoalForResponse } from "@/lib/goal-enterprise";
 import { connectDB } from "@/lib/mongodb";
 import { Goal } from "@/models/Goal";
 
@@ -23,17 +24,22 @@ export async function GET(req: Request) {
       .populate("assignedManager", "name")
       .lean();
 
-    const data = goals.map((g: any) => ({
-      "Employee Name": g.creator?.name || "",
-      "Department": g.creator?.department || g.department || "",
-      "Team": g.team?.name || "",
-      "Goal Title": g.title,
-      "Status": g.status || "not-started",
-      "Planned Target (Tasks)": g.numberOfTasks || 1,
-      "Actual Achievement": g.actualAchievement || "",
-      "Approval Status": g.approvalStatus || "Draft",
-      "Quarterly Progress": `${g.progress || 0}%`,
-    }));
+    const data = goals.map((g: any) => {
+      const normalized = normalizeGoalForResponse(g);
+      return {
+        "Employee Name": g.creator?.name || "",
+        "Department": g.creator?.department || g.department || "",
+        "Team": g.team?.name || "",
+        "Goal Title": g.title,
+        "Status": g.status || "not-started",
+        "Goal Weightage": `${normalized.effectiveGoalWeightage ?? 10}%`,
+        "Planned Target (Tasks)": g.numberOfTasks || 1,
+        "Contribution Per Task": `${normalized.taskContributionWeight}%`,
+        "Actual Achievement": g.actualAchievement || "",
+        "Approval Status": g.approvalStatus || "Draft",
+        "Quarterly Progress": `${g.progress || 0}%`,
+      };
+    });
 
     if (format === "xlsx") {
       const worksheet = xlsx.utils.json_to_sheet(data);
