@@ -337,7 +337,7 @@ export default function TeamClient({ user }: { user: any }) {
       roleLabel={user.roleLabel}
       role={user.role}
     >
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="w-full min-w-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground ">
@@ -355,10 +355,10 @@ export default function TeamClient({ user }: { user: any }) {
               </p>
             )}
           </div>
-          <div className="flex w-full sm:w-auto gap-3">
+          <div className="flex w-full gap-3 sm:w-auto">
             <Button
               variant="outline"
-              className="flex items-center gap-2 bg-card "
+              className="flex h-11 items-center gap-2 bg-card "
             >
               <Filter className="h-4 w-4" /> Filter
             </Button>
@@ -388,7 +388,7 @@ export default function TeamClient({ user }: { user: any }) {
         </Card>
 
         <Card className="border-border/60 shadow-sm bg-card/80 backdrop-blur-xl overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
             <Table>
               <TableHeader className="bg-muted/20 dark:bg-slate-800/50">
                 <TableRow className="border-border hover:bg-transparent">
@@ -537,7 +537,7 @@ export default function TeamClient({ user }: { user: any }) {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-card p-6 rounded-xl shadow-xl w-full max-w-md border border-border animate-in zoom-in-95 duration-200">
+          <div className="max-h-[calc(100vh-2rem)] w-[min(100vw-2rem,28rem)] overflow-y-auto rounded-xl border border-border bg-card p-5 shadow-xl animate-in zoom-in-95 duration-200 sm:p-6">
             <div className="mb-4">
               <h3 className="text-lg font-semibold tracking-tight text-foreground ">
                 {isManagerAddMembers
@@ -658,7 +658,7 @@ export default function TeamClient({ user }: { user: any }) {
       {/* Approval Modal */}
       {approvalUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-card p-6 rounded-xl shadow-xl w-full max-w-md border border-border animate-in zoom-in-95 duration-200">
+          <div className="max-h-[calc(100vh-2rem)] w-[min(100vw-2rem,28rem)] overflow-y-auto rounded-xl border border-border bg-card p-5 shadow-xl animate-in zoom-in-95 duration-200 sm:p-6">
             <div className="mb-4 text-center">
               <div className="mx-auto w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-4">
                 <Avatar className="h-10 w-10">
@@ -676,7 +676,7 @@ export default function TeamClient({ user }: { user: any }) {
             </div>
             
             <div className="space-y-4 bg-muted/30 p-4 rounded-lg mb-6 border border-border/50">
-              <div className="grid grid-cols-3 gap-2 text-sm">
+              <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
                 <span className="text-muted-foreground font-medium">Name:</span>
                 <span className="col-span-2 font-medium text-foreground">{approvalUser.name}</span>
                 

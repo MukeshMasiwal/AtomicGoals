@@ -151,14 +151,14 @@ export default function TopNav({
   };
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border/80 bg-card/90 px-4 py-4 backdrop-blur-md sm:px-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <header className="sticky top-0 z-20 border-b border-border/80 bg-card/90 px-3 py-3 backdrop-blur-md sm:px-4 sm:py-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex items-center gap-2 lg:hidden">
             <Button
               variant="ghost"
               size="icon"
-              className="shrink-0"
+              className="h-11 w-11 shrink-0 rounded-xl"
               onClick={onToggleSidebar}
               aria-label="Toggle sidebar"
             >
@@ -166,7 +166,7 @@ export default function TopNav({
             </Button>
             <Logo showText={false} />
           </div>
-          <div className="min-w-0 hidden lg:block">
+          <div className="min-w-0 hidden md:block">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               {title}
             </p>
@@ -180,15 +180,15 @@ export default function TopNav({
         </div>
 
         <div className="flex flex-1 flex-wrap items-center justify-end gap-2 sm:gap-3">
-          <div className="relative hidden w-full max-w-xs lg:block">
+          <div className="relative hidden w-full max-w-xs md:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="rounded-xl border-border bg-muted/50 pl-9 focus:bg-card dark:focus:bg-slate-950"
               placeholder="Search goals, teams..."
             />
           </div>
-          {roleSwitcher}
-          <Badge variant="slate" className="hidden sm:inline-flex">
+          <div className="hidden sm:block">{roleSwitcher}</div>
+          <Badge variant="slate" className="hidden md:inline-flex">
             {roleLabel}
           </Badge>
           <ThemeToggle />
@@ -197,7 +197,7 @@ export default function TopNav({
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative rounded-xl transition hover:bg-muted dark:hover:bg-slate-800"
+                className="relative h-11 w-11 rounded-xl transition hover:bg-muted dark:hover:bg-slate-800"
                 aria-label="Notifications"
               >
                 <Bell className="h-5 w-5 text-foreground/80" />
@@ -208,7 +208,7 @@ export default function TopNav({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-[350px] sm:w-[400px] max-w-[95vw] p-0 overflow-hidden rounded-xl border border-border shadow-lg"
+              className="w-[min(92vw,22rem)] sm:w-[400px] max-w-[95vw] p-0 overflow-hidden rounded-xl border border-border shadow-lg"
             >
               <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
                 <span className="font-semibold text-sm">Notifications {unreadCount > 0 && `(${unreadCount})`}</span>
@@ -221,7 +221,7 @@ export default function TopNav({
                   </button>
                 )}
               </div>
-              <div className="max-h-[400px] overflow-y-auto">
+              <div className="max-h-[60vh] overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-8 text-center">
                     <Bell className="h-8 w-8 text-muted-foreground/30 mb-3" />
@@ -343,7 +343,7 @@ export default function TopNav({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-full border border-border bg-card px-2 py-1 text-sm shadow-sm transition hover:border-slate-300">
+              <button className="flex h-11 items-center gap-2 rounded-full border border-border bg-card px-2.5 py-1.5 text-sm shadow-sm transition hover:border-slate-300">
                 <Avatar className="h-8 w-8">
                   {avatar ? (
                     <img
@@ -360,7 +360,7 @@ export default function TopNav({
                 <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuItem asChild>
                 <Link
                   href="/dashboard/settings"

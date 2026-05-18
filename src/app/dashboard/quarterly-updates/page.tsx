@@ -69,7 +69,7 @@ export default async function QuarterlyUpdatesPage() {
       }
       role={session.role}
     >
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="w-full min-w-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground ">
@@ -82,8 +82,8 @@ export default async function QuarterlyUpdatesPage() {
           <QuarterlyExportButton />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Card className="min-w-0 border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 Current Quarter
@@ -99,7 +99,7 @@ export default async function QuarterlyUpdatesPage() {
               </p>
             </CardContent>
           </Card>
-          <Card className="border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
+          <Card className="min-w-0 border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 Overall Progress
@@ -138,8 +138,8 @@ export default async function QuarterlyUpdatesPage() {
               goals.map((goal) => (
                 <div key={goal._id.toString()} className="relative pl-6">
                   <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-indigo-600 bg-card " />
-                  <Card className="border-border/60 shadow-sm bg-card/80 backdrop-blur-xl ">
-                    <CardHeader className="pb-3 flex flex-row items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
+                  <Card className="min-w-0 border-border/60 shadow-sm bg-card/80 backdrop-blur-xl ">
+                    <CardHeader className="pb-3 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
                       <div>
                         <CardTitle className="text-base">
                           {goal.title}
@@ -160,7 +160,7 @@ export default async function QuarterlyUpdatesPage() {
                       </Badge>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="flex flex-col sm:flex-row gap-4 text-sm w-full">
+                      <div className="flex w-full flex-col gap-4 text-sm sm:flex-row">
                         <div className="flex-1 space-y-1">
                           <div className="flex justify-between">
                             <span className="font-medium text-slate-700 ">
@@ -175,7 +175,7 @@ export default async function QuarterlyUpdatesPage() {
                             className="h-2"
                           />
                         </div>
-                        <div className="flex flex-col gap-2 min-w-[200px]">
+                        <div className="flex min-w-0 flex-col gap-2 sm:min-w-[200px]">
                           <div className="flex items-center gap-1.5 text-foreground/80 ">
                             <CheckCircle className="h-4 w-4 text-indigo-500" />
                             <span className="font-medium">Actual:</span>{" "}

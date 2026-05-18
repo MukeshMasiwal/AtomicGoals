@@ -115,7 +115,7 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
       roleLabel={sessionUser.roleLabel}
       role={sessionUser.role}
     >
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="w-full min-w-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground">
@@ -128,7 +128,7 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
         </div>
 
         <Card className="border-border shadow-sm">
-          <CardContent className="p-4 flex flex-col sm:flex-row gap-4">
+          <CardContent className="flex flex-col gap-4 p-4 sm:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -159,7 +159,7 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
         </Card>
 
         <Card className="border-border shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
             <Table>
               <TableHeader className="bg-muted/20">
                 <TableRow>

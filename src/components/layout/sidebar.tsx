@@ -98,7 +98,7 @@ export default function Sidebar({
   return (
     <aside
       className={cn(
-        "flex h-screen w-64 flex-col gap-6 border-r border-border/80 bg-card px-4 py-6 shadow-soft transition-all duration-300",
+        "flex h-full max-h-dvh w-64 flex-col gap-5 overflow-hidden border-r border-border/80 bg-card/95 px-4 py-5 shadow-soft backdrop-blur-xl transition-all duration-300",
         collapsed && "w-[88px] px-3",
       )}
     >
@@ -106,7 +106,7 @@ export default function Sidebar({
         <Logo showText={!collapsed} />
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
+      <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-1">
         {visibleItems.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -120,7 +120,7 @@ export default function Sidebar({
               onClick={onClose}
               title={collapsed ? item.label : undefined}
               className={cn(
-                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/80 transition-all hover:bg-muted hover:text-foreground",
+                "group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/80 transition-all hover:bg-muted hover:text-foreground",
                 isActive &&
                   "bg-primary/10 text-primary shadow-sm shadow-primary/5",
               )}
@@ -145,7 +145,7 @@ export default function Sidebar({
           void handleLogout();
           onClose?.();
         }}
-        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
+        className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
       >
         <LogOut className="h-4 w-4" />
         {!collapsed ? <span>Logout</span> : null}

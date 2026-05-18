@@ -99,7 +99,7 @@ export default function SettingsPage() {
       roleLabel={displayRoleLabel}
       role={role as any}
     >
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
+      <div className="mx-auto w-full max-w-4xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-foreground ">
             Settings
@@ -109,12 +109,12 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-[250px_1fr]">
-          <div className="flex flex-col gap-2">
+        <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
+          <div className="flex flex-row gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
             <Button
               variant="ghost"
               onClick={() => setActiveTab("profile")}
-              className={`justify-start ${activeTab === "profile" ? "bg-muted text-foreground dark:bg-slate-800" : "text-muted-foreground hover:text-foreground dark:hover:text-white dark:hover:bg-slate-800"}`}
+              className={`h-11 shrink-0 justify-start ${activeTab === "profile" ? "bg-muted text-foreground dark:bg-slate-800" : "text-muted-foreground hover:text-foreground dark:hover:text-white dark:hover:bg-slate-800"}`}
             >
               <User className="mr-2 h-4 w-4" />
               Profile
@@ -122,7 +122,7 @@ export default function SettingsPage() {
             <Button
               variant="ghost"
               onClick={() => setActiveTab("notifications")}
-              className={`justify-start ${activeTab === "notifications" ? "bg-muted text-foreground dark:bg-slate-800" : "text-muted-foreground hover:text-foreground dark:hover:text-white dark:hover:bg-slate-800"}`}
+              className={`h-11 shrink-0 justify-start ${activeTab === "notifications" ? "bg-muted text-foreground dark:bg-slate-800" : "text-muted-foreground hover:text-foreground dark:hover:text-white dark:hover:bg-slate-800"}`}
             >
               <Bell className="mr-2 h-4 w-4" />
               Notifications

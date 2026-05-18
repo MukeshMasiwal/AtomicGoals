@@ -69,7 +69,7 @@ export default async function AnalyticsPage() {
       }
       role={session.role}
     >
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="w-full min-w-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground ">
@@ -86,15 +86,15 @@ export default async function AnalyticsPage() {
           {(session.role === "admin" || session.role === "manager") && (
             <a
               href="/api/export"
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 bg-indigo-600 text-white hover:bg-indigo-700 h-10 px-4 py-2"
+              className="inline-flex h-11 w-full items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 sm:w-auto"
             >
               Export CSV Report
             </a>
           )}
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Card className="min-w-0 border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 Total Goals
@@ -109,7 +109,7 @@ export default async function AnalyticsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
+          <Card className="min-w-0 border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 Completion Rate
@@ -124,7 +124,7 @@ export default async function AnalyticsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
+          <Card className="min-w-0 border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 Avg. Progress
@@ -139,7 +139,7 @@ export default async function AnalyticsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
+          <Card className="min-w-0 border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 Action Required
@@ -153,8 +153,8 @@ export default async function AnalyticsPage() {
           </Card>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="border-border/60 shadow-sm bg-card/80 backdrop-blur-xl ">
+        <div className="grid gap-4 xl:grid-cols-2">
+          <Card className="min-w-0 border-border/60 shadow-sm bg-card/80 backdrop-blur-xl ">
             <CardHeader>
               <CardTitle>Detailed Breakdown</CardTitle>
             </CardHeader>
@@ -202,7 +202,7 @@ export default async function AnalyticsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/60 shadow-sm bg-card/80 backdrop-blur-xl flex flex-col justify-center items-center p-8 min-h-[300px]">
+          <Card className="min-w-0 border-border/60 shadow-sm bg-card/80 backdrop-blur-xl flex flex-col justify-center items-center p-8 min-h-[300px]">
             <div className="flex flex-col items-center justify-center text-center space-y-3">
               <div className="h-24 w-24 rounded-full border-8 border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center border-t-indigo-600 dark:border-t-indigo-500 transform rotate-45">
                 <div className="transform -rotate-45">

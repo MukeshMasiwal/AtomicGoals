@@ -356,7 +356,7 @@ export default function GoalsClient({ user }: { user: any }) {
       roleLabel={user.roleLabel}
       role={user.role}
     >
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="w-full min-w-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground ">
@@ -366,7 +366,7 @@ export default function GoalsClient({ user }: { user: any }) {
               Manage, track, and approve objectives for your organization.
             </p>
           </div>
-          <div className="flex w-full sm:w-auto gap-3">
+          <div className="flex w-full gap-3 sm:w-auto">
             <Button
               onClick={handleOpenCreate}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-sm"
@@ -377,7 +377,7 @@ export default function GoalsClient({ user }: { user: any }) {
         </div>
 
         <Card className="border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
-          <CardContent className="p-4 flex flex-col md:flex-row gap-4">
+          <CardContent className="flex flex-col gap-4 p-4 md:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -433,7 +433,7 @@ export default function GoalsClient({ user }: { user: any }) {
         </Card>
 
         <Card className="border-border/60 shadow-sm bg-card/80 backdrop-blur-xl overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
             <Table>
               <TableHeader className="bg-muted/20 dark:bg-slate-800/50">
                 <TableRow className="border-border hover:bg-transparent">
@@ -545,7 +545,7 @@ export default function GoalsClient({ user }: { user: any }) {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-card p-6 rounded-xl shadow-xl w-full max-w-md border border-border max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+          <div className="max-h-[calc(100vh-2rem)] w-[min(100vw-2rem,28rem)] overflow-y-auto rounded-xl border border-border bg-card p-5 shadow-xl animate-in zoom-in-95 duration-200 sm:p-6">
             <div className="mb-4">
               <h3 className="text-lg font-semibold tracking-tight text-foreground ">
                 {editingGoal ? "Edit Goal" : "Create Goal"}
@@ -684,7 +684,7 @@ export default function GoalsClient({ user }: { user: any }) {
 
       {approvalModalGoal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-card p-6 rounded-xl shadow-xl w-full max-w-sm border border-border animate-in zoom-in-95 duration-200">
+          <div className="max-h-[calc(100vh-2rem)] w-[min(100vw-2rem,24rem)] overflow-y-auto rounded-xl border border-border bg-card p-5 shadow-xl animate-in zoom-in-95 duration-200 sm:p-6">
             <h3 className="text-lg font-semibold tracking-tight text-foreground mb-4">
               {approvalModalStatus === "Approved"
                 ? "Approve Goal"
@@ -796,7 +796,7 @@ export default function GoalsClient({ user }: { user: any }) {
               )}
             </div>
 
-            <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+            <div className="mt-8 flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-slate-800/50 sm:flex-row sm:justify-end">
               <Button variant="outline" onClick={() => setDetailGoal(null)}>
                 Close
               </Button>
