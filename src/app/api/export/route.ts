@@ -31,13 +31,13 @@ export async function GET(req: Request) {
         "Department": g.creator?.department || g.department || "",
         "Team": g.team?.name || "",
         "Goal Title": g.title,
-        "Status": g.status || "not-started",
-        "Goal Weightage": `${normalized.effectiveGoalWeightage ?? 10}%`,
-        "Planned Target (Tasks)": g.numberOfTasks || 1,
-        "Contribution Per Task": `${normalized.taskContributionWeight}%`,
-        "Actual Achievement": g.actualAchievement || "",
+        "Manager": g.assignedManager?.name || "",
+        "Planned Target": g.plannedTargetValue !== null ? g.plannedTargetValue : (g.quarterlyTarget || ""),
+        "Actual Achievement": g.actualAchievementValue !== null ? g.actualAchievementValue : (g.actualAchievement || ""),
+        "KPI Score": g.score || 0,
+        "Quarterly Status": g.quarterlyStatus || "not-started",
+        "Completion %": `${g.progress || 0}%`,
         "Approval Status": g.approvalStatus || "Draft",
-        "Quarterly Progress": `${g.progress || 0}%`,
       };
     });
 

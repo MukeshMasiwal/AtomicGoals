@@ -1,5 +1,17 @@
 import type { Role } from "@/types";
 
+export type QuarterlyWindowKey = "goal-setting" | "q1-check-in" | "q2-check-in" | "q3-check-in" | "annual-check-in" | "closed";
+export type KpiType = "min" | "max" | "timeline" | "zero";
+export type QuarterlyStatus = "not-started" | "on-track" | "completed";
+
+export type QuarterlyScoreInput = {
+  kpiType?: string | null;
+  plannedTargetValue?: number | null;
+  actualAchievementValue?: number | null;
+  dueDate?: string | Date | null;
+  completionDate?: string | Date | null;
+};
+
 export type EnterpriseGoalLike = {
   _id?: unknown;
   title?: string;
@@ -17,6 +29,14 @@ export type EnterpriseGoalLike = {
   department?: string | null;
   assignedManager?: unknown;
   dueDate?: string | Date | null;
+  kpiType?: string | null;
+  plannedTargetValue?: number | null;
+  actualAchievementValue?: number | null;
+  plannedTarget?: string | null;
+  actualAchievement?: string | null;
+  quarterlyStatus?: string | null;
+  completionPercentage?: number | null;
+  score?: number | null;
 };
 
 export type EnterpriseGoalValidationResult =
@@ -68,6 +88,185 @@ function toIdString(value: unknown): string {
 function toIdList(values: unknown): string[] {
   if (!Array.isArray(values)) return [];
   return values.map(toIdString).filter(Boolean);
+}
+
+function clampScore(value: number): number {
+  if (Number.isNaN(value) || !Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function toDate(value: string | Date | null | undefined): Date | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function diffDays(a: Date, b: Date): number {
+  const ms = a.getTime() - b.getTime();
+  return Math.ceil(ms / (1000 * 60 * 60 * 24));
+}
+
+export function getQuarterlyWindow(date: Date = new Date()): {
+  key: QuarterlyWindowKey;
+  label: string;
+  open: boolean;
+  locked: boolean;
+  allowedActions: string[];
+  message: string;
+} {
+  const month = date.getMonth() + 1;
+
+  if (month === 5) {
+    return {
+      key: "goal-setting",
+      label: "Goal setting",
+      open: true,
+      locked: false,
+      allowedActions: ["goal-setting", "approval"],
+      message: "Goal setting window is open.",
+    };
+  }
+
+  if (month === 7) {
+    return {
+      key: "q1-check-in",
+      label: "Q1 check-in",
+      open: true,
+      locked: false,
+      allowedActions: ["planned-vs-actual", "progress-update", "comment"],
+      message: "Q1 check-in window is open.",
+    };
+  }
+
+  if (month === 10) {
+    return {
+      key: "q2-check-in",
+      label: "Q2 check-in",
+      open: true,
+      locked: false,
+      allowedActions: ["progress-update", "comment"],
+      message: "Q2 check-in window is open.",
+    };
+  }
+
+  if (month === 1) {
+    return {
+      key: "q3-check-in",
+      label: "Q3 check-in",
+      open: true,
+      locked: false,
+      allowedActions: ["progress-update", "comment"],
+      message: "Q3 check-in window is open.",
+    };
+  }
+
+  if (month === 3 || month === 4) {
+    return {
+      key: "annual-check-in",
+      label: "Annual check-in",
+      open: true,
+      locked: false,
+      allowedActions: ["final-achievement", "comment"],
+      message: "Annual check-in window is open.",
+    };
+  }
+
+  return {
+    key: "closed",
+    label: "Closed",
+    open: false,
+    locked: true,
+    allowedActions: [],
+    message: "Quarterly check-in window currently closed.",
+  };
+}
+
+export function isQuarterlyWindowOpen(date: Date = new Date()): boolean {
+  return getQuarterlyWindow(date).open;
+}
+
+export function canMutateQuarterlyData(
+  date: Date = new Date(),
+  role: Role | "admin" | "manager" | "employee" = "employee",
+): boolean {
+  const window = getQuarterlyWindow(date);
+  if (window.open) return true;
+  return role === "admin";
+}
+
+export function computeKpiScore(input: QuarterlyScoreInput): number {
+  const kpiType = (input.kpiType || "min").toLowerCase() as KpiType;
+  const planned = Number(input.plannedTargetValue ?? 0);
+  const actual = Number(input.actualAchievementValue ?? 0);
+  const dueDate = toDate(input.dueDate);
+  const completionDate = toDate(input.completionDate);
+
+  switch (kpiType) {
+    case "max":
+      if (actual <= 0) return planned <= 0 ? 100 : 0;
+      return clampScore((planned / actual) * 100);
+    case "timeline": {
+      if (!dueDate || !completionDate) return 0;
+      if (completionDate <= dueDate) return 100;
+      const daysLate = diffDays(completionDate, dueDate);
+      return clampScore(100 - daysLate * 10);
+    }
+    case "zero":
+      return actual === 0 ? 100 : 0;
+    case "min":
+    default:
+      if (planned <= 0) return actual <= 0 ? 100 : 0;
+      return clampScore((actual / planned) * 100);
+  }
+}
+
+export function deriveQuarterlyStatus(
+  input: QuarterlyScoreInput & { existingStatus?: string | null },
+): QuarterlyStatus {
+  const score = computeKpiScore(input);
+  if (score >= 100) return "completed";
+  if (score > 0) return "on-track";
+
+  const existingStatus = (input.existingStatus || "").toLowerCase();
+  if (existingStatus === "completed") return "completed";
+  if (existingStatus === "on-track" || existingStatus === "in-progress") return "on-track";
+  return "not-started";
+}
+
+export function normalizeQuarterlyStatus(status?: string | null): QuarterlyStatus {
+  const normalized = (status || "").toLowerCase();
+  if (normalized === "completed") return "completed";
+  if (normalized === "on-track" || normalized === "in-progress" || normalized === "at-risk") {
+    return "on-track";
+  }
+  return "not-started";
+}
+
+export function isQuarterlyRestrictedMutation(update: Record<string, unknown>): boolean {
+  return [
+    "plannedTarget",
+    "plannedTargetValue",
+    "actualAchievement",
+    "actualAchievementValue",
+    "quarterlyStatus",
+    "progress",
+    "status",
+    "kpiType",
+    "completionDate",
+    "quarterlyTarget",
+  ].some((key) => key in update);
+}
+
+export function getQuarterLabel(date: Date = new Date()): string {
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+
+  if (month === 7) return `Q1 ${year}`;
+  if (month === 10) return `Q2 ${year}`;
+  if (month === 1) return `Q3 ${year}`;
+  if (month === 3 || month === 4) return `Q4 ${year}`;
+  if (month === 5) return `Goal Setting ${year}`;
+  return `Q${Math.ceil(month / 3)} ${year}`;
 }
 
 export function isEnterpriseActiveGoal(goal: EnterpriseGoalLike): boolean {
@@ -145,10 +344,10 @@ export function resolveEnterpriseGoalWeights(goals: EnterpriseGoalLike[]): Enter
     };
   }
 
-  if (activeGoals.length > 8) {
+  if (activeGoals.length > 10) {
     return {
       valid: false,
-      error: "Maximum 8 goals allowed per employee.",
+      error: "Maximum 10 goals allowed per employee.",
     };
   }
 
@@ -242,6 +441,37 @@ export function calculateWeightedProgress(goals: EnterpriseGoalLike[]) {
     weightedProgress,
     totalWeightage: validation.totalWeightage,
     validation,
+  };
+}
+
+export function calculateQuarterlyCompletionPercent(params: {
+  plannedTargetValue?: number | null;
+  actualAchievementValue?: number | null;
+  kpiType?: string | null;
+  dueDate?: string | Date | null;
+  completionDate?: string | Date | null;
+}): number {
+  return computeKpiScore(params);
+}
+
+export function computeQuarterlyWorkflowState(goal: EnterpriseGoalLike) {
+  const score = calculateQuarterlyCompletionPercent({
+    plannedTargetValue: goal.plannedTargetValue ?? goal.contributionPercentage ?? 0,
+    actualAchievementValue: goal.actualAchievementValue ?? goal.progress ?? 0,
+    kpiType: goal.kpiType ?? "min",
+    dueDate: goal.dueDate,
+  });
+
+  const quarterlyStatus = normalizeQuarterlyStatus(goal.quarterlyStatus ?? goal.status);
+
+  return {
+    score,
+    quarterlyStatus,
+    completionPercentage:
+      typeof goal.completionPercentage === "number"
+        ? goal.completionPercentage
+        : score,
+    kpiType: (goal.kpiType || "min") as KpiType,
   };
 }
 

@@ -88,6 +88,7 @@ export async function POST(req: Request) {
       assignedManager,
       numberOfTasks,
       goalWeightage,
+      kpiType,
     } = await req.json();
 
     if (!dueDate) {
@@ -113,9 +114,9 @@ export async function POST(req: Request) {
       );
     }
 
-    if (numberOfTasks && numberOfTasks < 1) {
+    if (numberOfTasks && (numberOfTasks < 1 || numberOfTasks > 10)) {
       return NextResponse.json(
-        { error: "Number of tasks must be positive" },
+        { error: "Number of tasks must be between 1 and 10" },
         { status: 400 },
       );
     }
@@ -184,9 +185,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: validation.error }, { status: 400 });
       }
 
-      if (participantGoals.length >= 8) {
+      if (participantGoals.length >= 10) {
         return NextResponse.json(
-          { error: "Maximum 8 goals allowed per employee." },
+          { error: "Maximum 10 tasks allowed per goal." },
           { status: 400 },
         );
       }
@@ -245,6 +246,7 @@ export async function POST(req: Request) {
       contributionPermissions: ["team-members"],
       approvalStatus: finalStatus,
       assignedManager,
+      kpiType: kpiType || "min",
     };
     if (team) {
       payload.team = team;

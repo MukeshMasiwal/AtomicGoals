@@ -113,9 +113,9 @@ export async function PUT(
       updates.dueDate = parsedDueDate;
     }
 
-    if (updates.numberOfTasks !== undefined && updates.numberOfTasks < 1) {
+    if (updates.numberOfTasks !== undefined && (updates.numberOfTasks < 1 || updates.numberOfTasks > 10)) {
       return NextResponse.json(
-        { error: "Number of tasks must be positive" },
+        { error: "Number of tasks must be between 1 and 10" },
         { status: 400 },
       );
     }

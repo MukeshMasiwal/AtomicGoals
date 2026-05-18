@@ -123,18 +123,23 @@ export async function fetchDashboardData() {
     const pendingCount = await Goal.countDocuments({ ...filter, approvalStatus: "Pending Approval" });
     const rejectedCount = await Goal.countDocuments({ ...filter, approvalStatus: "Rejected" });
 
+    const checkinCompletedCount = await Goal.countDocuments({ ...filter, quarterlyStatus: { $ne: "not-started" } });
+    const pendingCheckinCount = await Goal.countDocuments({ ...filter, quarterlyStatus: "not-started" });
+    const managerReviewedCount = await Goal.countDocuments({ ...filter, approvalComments: { $exists: true, $ne: "" } });
+
     let dynamicKpis = mock.kpis;
     if (role === "employee") {
       dynamicKpis = [
         { label: "Total Goals", value: goalCount, trend: "", tone: "up" },
         { label: "Goals Approved", value: approvedCount, trend: "", tone: "up" },
-        { label: "Goals Pending", value: pendingCount, trend: "", tone: "down" },
+        { label: "Pending Check-ins", value: pendingCheckinCount, trend: "", tone: "down" },
+        { label: "Quarterly Score", value: (goals.reduce((acc, g: any) => acc + (g.score || 0), 0) / (goalCount || 1)).toFixed(1), trend: "", tone: "up" },
       ];
     } else {
       dynamicKpis = [
-        { label: "Total Goals", value: goalCount, trend: "", tone: "up" },
-        { label: "Approved Goals", value: approvedCount, trend: "", tone: "up" },
-        { label: "Rejected Goals", value: rejectedCount, trend: "", tone: "down" },
+        { label: "Check-ins Complete", value: checkinCompletedCount, trend: `${Math.round((checkinCompletedCount / (goalCount || 1)) * 100)}% dept`, tone: "up" },
+        { label: "Pending Reviews", value: pendingCheckinCount, trend: "", tone: "down" },
+        { label: "Manager Reviewed", value: managerReviewedCount, trend: "", tone: "up" },
       ];
     }
 

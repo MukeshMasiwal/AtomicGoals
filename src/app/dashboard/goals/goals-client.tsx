@@ -60,6 +60,7 @@ export default function GoalsClient({ user }: { user: any }) {
     deadline: "",
     team: "",
     assignedManager: "",
+    kpiType: "min",
   });
   const [detailGoal, setDetailGoal] = useState<any>(null);
   const [formError, setFormError] = useState("");
@@ -235,6 +236,7 @@ export default function GoalsClient({ user }: { user: any }) {
       deadline: "",
       team: "",
       assignedManager: "",
+      kpiType: "min",
     });
     setIsModalOpen(true);
   };
@@ -252,6 +254,7 @@ export default function GoalsClient({ user }: { user: any }) {
         : "",
       team: goal.team?._id || goal.team || "",
       assignedManager: goal.assignedManager?._id || goal.assignedManager || "",
+      kpiType: goal.kpiType || "min",
     });
     setFormError("");
     setIsModalOpen(true);
@@ -346,8 +349,8 @@ export default function GoalsClient({ user }: { user: any }) {
         );
       });
 
-      if (!editingGoal && activeEmployeeGoals.length >= 8) {
-        setFormError("Maximum 8 goals allowed per employee.");
+      if (!editingGoal && activeEmployeeGoals.length >= 10) {
+        setFormError("Maximum 10 tasks allowed per goal.");
         return;
       }
 
@@ -454,7 +457,7 @@ export default function GoalsClient({ user }: { user: any }) {
           <div className="flex w-full gap-3 sm:w-auto">
             <Button
               onClick={handleOpenCreate}
-              disabled={user.role === "employee" && activeEmployeeGoalCount >= 8}
+              disabled={user.role === "employee" && activeEmployeeGoalCount >= 10}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-sm"
             >
               <Plus className="h-4 w-4" /> Create Goal
@@ -675,11 +678,12 @@ export default function GoalsClient({ user }: { user: any }) {
                   <Input
                     type="number"
                     min="1"
+                    max="10"
                     value={formData.numberOfTasks}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        numberOfTasks: Math.max(1, parseInt(e.target.value) || 1),
+                        numberOfTasks: Math.max(1, Math.min(10, parseInt(e.target.value) || 1)),
                       })
                     }
                     className="bg-muted/50 "
@@ -763,11 +767,27 @@ export default function GoalsClient({ user }: { user: any }) {
                   ))}
                 </select>
               </div>
+              <div className="space-y-2">
+                <Label>
+                  KPI Tracking Type
+                </Label>
+                <select
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  value={formData.kpiType}
+                  onChange={(e) =>
+                    setFormData({ ...formData, kpiType: e.target.value })
+                  }
+                >
+                  <option value="min">MIN Type (Higher is Better, e.g. Sales)</option>
+                  <option value="max">MAX Type (Lower is Better, e.g. Cost)</option>
+                  <option value="timeline">TIMELINE Type (Date completion)</option>
+                  <option value="zero">ZERO Type (E.g. 0 incidents)</option>
+                </select>
+              </div>
               {!editingGoal && (
                 <div className="space-y-2">
                   <Label className="text-xs text-amber-600 dark:text-amber-500">
-                    Goal will be created as 'Pending Approval' for
-                    Managers/Admins.
+                    Goal will be created as 'Pending Approval' for Managers/Admins.
                   </Label>
                 </div>
               )}
