@@ -113,11 +113,11 @@ export default function Home() {
               Impact
             </Link>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/login">
               <Button
                 variant="ghost"
-                className="hidden sm:inline-flex text-foreground/80 hover:text-indigo-600 dark:hover:text-indigo-400"
+                className="inline-flex h-9 px-3 text-sm text-foreground/80 hover:text-indigo-600 dark:hover:text-indigo-400 sm:h-10 sm:px-4"
               >
                 Log In
               </Button>
