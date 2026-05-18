@@ -17,6 +17,12 @@ export type SessionPayload = {
   onboardingCompleted?: boolean;
 };
 
+export type AuthRedirectPath =
+  | "/dashboard"
+  | "/onboarding"
+  | "/waiting-approval"
+  | "/rejected";
+
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
@@ -98,6 +104,24 @@ export function sessionPayloadToUser(payload: SessionPayload): SessionUser {
     approvalStatus: payload.approvalStatus || "Pending Approval",
     onboardingCompleted: payload.onboardingCompleted || false,
   };
+}
+
+export function resolveAuthRedirectPath(
+  session: Pick<SessionPayload, "approvalStatus" | "onboardingCompleted">,
+): AuthRedirectPath {
+  if (!session.onboardingCompleted) {
+    return "/onboarding";
+  }
+
+  if (session.approvalStatus === "Approved") {
+    return "/dashboard";
+  }
+
+  if (session.approvalStatus === "Rejected") {
+    return "/rejected";
+  }
+
+  return "/waiting-approval";
 }
 
 export async function setSessionCookie(token: string): Promise<void> {

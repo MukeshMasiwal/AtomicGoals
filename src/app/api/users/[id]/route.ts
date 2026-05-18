@@ -66,7 +66,11 @@ export async function PATCH(
 
     const existingUser = await User.findById(params.id)
       .select("team manager name")
-      .lean();
+      .lean<{
+        team?: { toString(): string };
+        manager?: { toString(): string };
+        name: string;
+      }>();
     if (!existingUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -75,7 +79,9 @@ export async function PATCH(
       if (session.role === "manager") {
         const managerTeam = await Team.findOne({ manager: session.id })
           .select("_id")
-          .lean();
+          .lean<{
+            _id: { toString(): string };
+          }>();
         const managerTeamId = managerTeam?._id?.toString();
         const targetTeamId = team ? String(team) : null;
 
@@ -105,7 +111,10 @@ export async function PATCH(
       if (targetTeamId) {
         const targetTeam = await Team.findById(targetTeamId)
           .select("members manager")
-          .lean();
+          .lean<{
+            members?: Array<{ toString(): string }>;
+            manager?: { toString(): string };
+          }>();
 
         if (!targetTeam) {
           return NextResponse.json({ error: "Team not found" }, { status: 404 });

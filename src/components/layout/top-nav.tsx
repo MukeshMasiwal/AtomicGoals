@@ -74,23 +74,49 @@ export default function TopNav({
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
+
     async function fetchNotifications() {
       try {
-        const res = await fetch("/api/notifications");
-        if (res.ok) {
-          const data = await res.json();
-          setNotifications(data.notifications || []);
-          setUnreadCount(
-            (data.notifications || []).filter((n: any) => !n.isRead).length,
-          );
+        const res = await fetch("/api/notifications", {
+          cache: "no-store",
+          credentials: "include",
+          signal: controller.signal,
+        });
+
+        if (!active) return;
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            setNotifications([]);
+            setUnreadCount(0);
+            return;
+          }
+
+          throw new Error(`Notifications request failed: ${res.status}`);
         }
+
+        const data = await res.json();
+        if (!active) return;
+
+        setNotifications(data.notifications || []);
+        setUnreadCount(
+          (data.notifications || []).filter((n: any) => !n.isRead).length,
+        );
       } catch (err) {
-        console.error(err);
+        if (controller.signal.aborted) return;
+        console.warn("[TopNav] notifications unavailable", err);
       }
     }
+
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30000); // refresh every 30s
-    return () => clearInterval(interval);
+    return () => {
+      active = false;
+      controller.abort();
+      clearInterval(interval);
+    };
   }, []);
 
   const handleMarkAllRead = async () => {

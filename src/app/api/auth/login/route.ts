@@ -8,6 +8,7 @@ import {
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
 import type { Role } from "@/types";
+import { resolveAuthRedirectPath } from "@/lib/auth";
 
 type LoginBody = {
   email?: string;
@@ -62,6 +63,17 @@ export async function POST(request: Request) {
     const token = await createSessionToken(sessionUser);
     await setSessionCookie(token);
 
+    const redirectTo = resolveAuthRedirectPath({
+      approvalStatus: sessionUser.approvalStatus,
+      onboardingCompleted: sessionUser.onboardingCompleted,
+    });
+
+    console.log("[AUTH] Password login", {
+      email: user.email,
+      role: sessionUser.role,
+      redirectTo,
+    });
+
     await logAudit({
       action: "user.login",
       actorEmail: user.email,
@@ -80,6 +92,7 @@ export async function POST(request: Request) {
         approvalStatus: sessionUser.approvalStatus,
         onboardingCompleted: sessionUser.onboardingCompleted,
       }),
+      redirectTo,
     });
   } catch (error) {
     console.error("[auth/login]", error);

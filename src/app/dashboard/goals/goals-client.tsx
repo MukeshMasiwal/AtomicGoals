@@ -247,6 +247,17 @@ export default function GoalsClient({ user }: { user: any }) {
               : g,
           ),
         );
+        setDetailGoal((current: any) =>
+          current && current._id === updatedGoal._id
+            ? {
+                ...current,
+                approvalStatus: updatedGoal.approvalStatus,
+                status: updatedGoal.status,
+                approvalComments: updatedGoal.approvalComments,
+                approvedBy: updatedGoal.approvedBy,
+              }
+            : current,
+        );
         setApprovalModalGoal(null);
       }
     } catch (err) {

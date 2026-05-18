@@ -34,7 +34,11 @@ export async function POST(
       if (session.role === "manager") {
         const managerTeam = await Team.findOne({ manager: session.id })
           .select("_id members manager")
-          .lean();
+          .lean<{
+            _id: { toString(): string };
+            members?: Array<{ toString(): string }>;
+            manager?: { toString(): string };
+          }>();
         if (!managerTeam?._id) {
           return NextResponse.json(
             { error: "No managed team found." },
@@ -54,7 +58,10 @@ export async function POST(
 
       const team = await Team.findById(finalTeamId)
         .select("members manager")
-        .lean();
+        .lean<{
+          members?: Array<{ toString(): string }>;
+          manager?: { toString(): string };
+        }>();
       if (!team) {
         return NextResponse.json({ error: "Team not found" }, { status: 404 });
       }

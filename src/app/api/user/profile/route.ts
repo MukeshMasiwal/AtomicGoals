@@ -72,7 +72,15 @@ export async function GET(req: Request) {
     }
 
     await connectDB();
-    const user = await User.findById(session.id).lean();
+    const user = await User.findById(session.id).lean<{
+      _id: { toString(): string };
+      email: string;
+      name: string;
+      role?: "employee" | "manager" | "admin";
+      department?: string;
+      approvalStatus?: "Pending Approval" | "Approved" | "Rejected";
+      onboardingCompleted?: boolean;
+    }>();
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });

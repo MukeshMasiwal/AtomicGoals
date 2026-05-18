@@ -7,6 +7,13 @@ import {
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
 import type { Role } from "@/types";
+import { resolveAuthRedirectPath } from "@/lib/auth";
+
+const DEMO_USERS: Record<string, { name: string; role: Role }> = {
+  "admin@atomicgoals.com": { name: "Admin User", role: "admin" },
+  "alice.eng@atomicgoals.com": { name: "Alice Engineer", role: "manager" },
+  "charlie.eng@atomicgoals.com": { name: "Charlie Coder", role: "employee" },
+};
 
 export async function POST(request: Request) {
   try {
@@ -37,6 +44,34 @@ export async function POST(request: Request) {
       );
     }
 
+    const demoProfile = DEMO_USERS[email] || null;
+    if (demoProfile && user.name !== demoProfile.name) {
+      await User.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            name: demoProfile.name,
+            role: demoProfile.role,
+            verified: true,
+            isSeedUser: true,
+            onboardingCompleted: true,
+            approvalStatus: "Approved",
+          },
+        },
+      );
+
+      user.name = demoProfile.name;
+      user.role = demoProfile.role;
+      user.onboardingCompleted = true;
+      user.approvalStatus = "Approved";
+
+      console.log("[AUTH] Normalized demo user profile", {
+        email,
+        name: demoProfile.name,
+        role: demoProfile.role,
+      });
+    }
+
     // Auto-authenticate without OTP checks
     const sessionUser = {
       id: String(user._id),
@@ -51,6 +86,17 @@ export async function POST(request: Request) {
     // Create session/token
     const token = await createSessionToken(sessionUser);
     await setSessionCookie(token);
+
+    const redirectTo = resolveAuthRedirectPath({
+      approvalStatus: sessionUser.approvalStatus,
+      onboardingCompleted: sessionUser.onboardingCompleted,
+    });
+
+    console.log("[AUTH] Seed login", {
+      email: user.email,
+      role: sessionUser.role,
+      redirectTo,
+    });
 
     // Log the audit event for demo
     await logAudit({
@@ -71,6 +117,7 @@ export async function POST(request: Request) {
         approvalStatus: sessionUser.approvalStatus,
         onboardingCompleted: sessionUser.onboardingCompleted,
       }),
+      redirectTo,
     });
   } catch (error) {
     console.error("[auth/seed-login]", error);

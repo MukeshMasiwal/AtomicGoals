@@ -113,7 +113,8 @@ export async function POST(req: Request) {
     await connectDB();
 
     // Approval logic based on roles
-    let finalStatus = approvalStatus || "Draft";
+    let finalStatus =
+      approvalStatus || (session.role === "admin" ? "Approved" : "Pending Approval");
 
     if (["Approved", "Rejected"].includes(finalStatus)) {
       if (session.role === "employee") {

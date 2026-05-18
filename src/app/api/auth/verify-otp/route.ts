@@ -7,6 +7,7 @@ import {
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
 import type { Role } from "@/types";
+import { resolveAuthRedirectPath } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
@@ -46,7 +47,12 @@ export async function POST(request: Request) {
       return Response.json({ error: "OTP has expired." }, { status: 401 });
     }
 
-    console.log(`[AUTH] OTP successfully verified for ${email}`);
+    console.log("[AUTH] OTP verified", {
+      email,
+      userId: String(user._id),
+      onboardingCompleted: user.onboardingCompleted ?? false,
+      approvalStatus: user.approvalStatus ?? "Pending Approval",
+    });
 
     // Clear OTP after successful verification
     await User.updateOne(
@@ -67,7 +73,16 @@ export async function POST(request: Request) {
     const token = await createSessionToken(sessionUser);
     await setSessionCookie(token);
 
-    console.log(`[AUTH] Session created for ${email}`);
+    const redirectTo = resolveAuthRedirectPath({
+      approvalStatus: sessionUser.approvalStatus,
+      onboardingCompleted: sessionUser.onboardingCompleted,
+    });
+
+    console.log("[AUTH] Session created", {
+      email,
+      userId: sessionUser.id,
+      redirectTo,
+    });
 
     await logAudit({
       action: "user.login",
@@ -87,6 +102,7 @@ export async function POST(request: Request) {
         approvalStatus: sessionUser.approvalStatus,
         onboardingCompleted: sessionUser.onboardingCompleted,
       }),
+      redirectTo,
     });
   } catch (error) {
     console.error("[auth/verify-otp]", error);

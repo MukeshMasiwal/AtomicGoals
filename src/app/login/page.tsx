@@ -52,10 +52,9 @@ export default function LoginPage() {
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  const redirectBasedOnRole = (role?: string) => {
-    // We are routing all authenticated users to the shared dashboard shell.
-    // The sidebar and proxy middleware handle actual route protection.
-    router.push("/dashboard");
+  const redirectAfterAuth = (redirectTo?: string) => {
+    router.replace(redirectTo || "/dashboard");
+    router.refresh();
   };
 
   async function handleSendOtp(event: React.FormEvent<HTMLFormElement>) {
@@ -74,6 +73,7 @@ export default function LoginPage() {
 
       const data = (await response.json().catch(() => ({}))) as {
         error?: string;
+        redirectTo?: string;
       };
 
       if (!response.ok) {
@@ -109,6 +109,7 @@ export default function LoginPage() {
       const data = (await response.json().catch(() => ({}))) as {
         error?: string;
         user?: { email?: string; name?: string; role?: string };
+        redirectTo?: string;
       };
 
       if (!response.ok) {
@@ -119,9 +120,7 @@ export default function LoginPage() {
 
       setStatus("success");
       setMessage(`Welcome, ${data.user?.name || email}. Redirecting…`);
-
-      // Perform immediate redirect based on role
-      redirectBasedOnRole(data.user?.role);
+      redirectAfterAuth(data.redirectTo);
     } catch {
       setStatus("error");
       setMessage("Verification failed. Please try again.");
@@ -143,6 +142,7 @@ export default function LoginPage() {
       const data = (await response.json().catch(() => ({}))) as {
         error?: string;
         user?: { email?: string; name?: string; role?: string };
+        redirectTo?: string;
       };
 
       if (!response.ok) {
@@ -153,9 +153,7 @@ export default function LoginPage() {
 
       setStatus("success");
       setMessage(`Welcome, ${data.user?.name || seedEmail}. Redirecting…`);
-
-      // Perform immediate redirect based on role
-      redirectBasedOnRole(data.user?.role);
+      redirectAfterAuth(data.redirectTo);
     } catch {
       setStatus("error");
       setMessage("Seed login error. Please try again.");
@@ -370,12 +368,12 @@ export default function LoginPage() {
                 },
                 {
                   role: "Manager",
-                  email: "manager@atomicgoals.com",
+                  email: "alice.eng@atomicgoals.com",
                   icon: UserCog,
                 },
                 {
-                  role: "Employee1",
-                  email: "employee1@atomicgoals.com",
+                  role: "Employee",
+                  email: "charlie.eng@atomicgoals.com",
                   icon: User,
                 },
               ].map((cred) => (

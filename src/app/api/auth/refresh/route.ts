@@ -15,17 +15,29 @@ export async function GET() {
     }
 
     await connectDB();
-    const user = await User.findById(session.id).lean();
+    console.log("[AUTH] Refresh requested", { userId: session.id });
+
+    const user = await User.findById(session.id).lean<{
+      _id: { toString(): string };
+      email: string;
+      name: string;
+      role?: "employee" | "manager" | "admin";
+      department?: string;
+      approvalStatus?: "Pending Approval" | "Approved" | "Rejected";
+      onboardingCompleted?: boolean;
+    }>();
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    const userId = user._id.toString();
+
     const newToken = await createSessionToken({
-      id: user._id.toString(),
+      id: userId,
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: user.role ?? "employee",
       department: user.department ?? "",
       approvalStatus: user.approvalStatus ?? "Pending Approval",
       onboardingCompleted: user.onboardingCompleted ?? false,
@@ -33,12 +45,18 @@ export async function GET() {
 
     await setSessionCookie(newToken);
 
+    console.log("[AUTH] Session refreshed", {
+      userId,
+      approvalStatus: user.approvalStatus ?? "Pending Approval",
+      onboardingCompleted: user.onboardingCompleted ?? false,
+    });
+
     return NextResponse.json({
       user: {
-        id: user._id.toString(),
+        id: userId,
         email: user.email,
         name: user.name,
-        role: user.role,
+        role: user.role ?? "employee",
         department: user.department ?? "",
         approvalStatus: user.approvalStatus ?? "Pending Approval",
         onboardingCompleted: user.onboardingCompleted ?? false,

@@ -28,8 +28,15 @@ export async function POST(request: Request) {
         email,
         role: "employee", // Default role
         department: "General",
+        verified: false,
+        onboardingCompleted: false,
+        approvalStatus: "Pending Approval",
         otp,
         otpExpiry: otpExpire,
+      });
+      console.log("[AUTH] Created placeholder user for OTP", {
+        email,
+        userId: String(user._id),
       });
       await logAudit({
         action: "user.signup",
@@ -42,6 +49,10 @@ export async function POST(request: Request) {
       user.otp = otp;
       user.otpExpiry = otpExpire;
       await user.save();
+      console.log("[AUTH] Re-issued OTP for existing user", {
+        email,
+        userId: String(user._id),
+      });
     }
 
     // Log the OTP to console for easy testing locally (since SMTP might fail)

@@ -13,13 +13,18 @@ export async function GET() {
     await connectDB();
     const sessionUser = (await User.findById(user.id)
       .select("team department")
-      .lean()) as any;
+      .lean<{
+        team?: { toString(): string };
+        department?: string;
+      }>()) as any;
     let query: any = {};
 
     if (user.role === "manager") {
       const managedTeam = await Team.findOne({ manager: user.id })
         .select("_id")
-        .lean();
+        .lean<{
+          _id: { toString(): string };
+        }>();
       const teamId = managedTeam?._id || sessionUser?.team;
       query = teamId
         ? { $or: [{ team: teamId }, { _id: user.id }] }
