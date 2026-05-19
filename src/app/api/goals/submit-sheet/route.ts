@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionFromCookies } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import { Goal } from "@/models/Goal";
+import { User } from "@/models/User";
 import { resolveEnterpriseGoalWeights } from "@/lib/goal-enterprise";
 
 export async function POST(req: Request) {
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
     );
 
     // Notify managers
-    const { createNotification } = await import("@/lib/notifications");
+    const { createNotification, notifyAdmins } = await import("@/lib/notifications");
     
     // We notify the assigned managers of the submitted goals
     const managerIds = [...new Set(draftGoals.map(g => String(g.assignedManager)))];
@@ -58,6 +59,16 @@ export async function POST(req: Request) {
         });
       }
     }
+
+    const userDoc = await User.findById(session.id).select("team").populate("team", "name").lean();
+    const teamName = ((userDoc as any)?.team as any)?.name || "No Team";
+
+    await notifyAdmins({
+      type: "Goal Created",
+      title: "Goal Sheet Submitted",
+      message: `${session.name} has submitted their Goal Sheet for approval (${teamName}).`,
+      link: "/dashboard/goals",
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

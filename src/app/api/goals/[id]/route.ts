@@ -136,6 +136,15 @@ export async function PUT(
       );
     }
 
+    if (updates.uom === "Percentage" && updates.plannedTargetValue !== undefined) {
+      if (updates.plannedTargetValue < 0 || updates.plannedTargetValue > 100) {
+        return NextResponse.json(
+          { error: "Percentage target must be between 0 and 100." },
+          { status: 400 }
+        );
+      }
+    }
+
     // Recalculate per-task contribution when either the goal weightage or number of tasks changes
     if (updates.goalWeightage !== undefined || updates.numberOfTasks !== undefined) {
       updates.goalWeightage = nextWeightage;
@@ -171,6 +180,28 @@ export async function PUT(
     const goalDocument = await Goal.findById(params.id);
     if (!goalDocument) {
       return NextResponse.json({ error: "Goal not found" }, { status: 404 });
+    }
+
+    if (updates.tasks && Array.isArray(updates.tasks)) {
+      if (updates.tasks.length > 10) {
+        return NextResponse.json({ error: "Maximum 10 tasks allowed per goal." }, { status: 400 });
+      }
+      const completedTasks = updates.tasks.filter((t: any) => t.status === "Completed").length;
+      const totalTasks = Math.max(updates.tasks.length, 1);
+      updates.tasksCompleted = completedTasks;
+      updates.numberOfTasks = totalTasks;
+      updates.progress = Math.round((completedTasks / totalTasks) * 100);
+      
+      // Auto-update goal status if all tasks are completed
+      if (updates.progress === 100) {
+        updates.status = "completed";
+        updates.quarterlyStatus = "completed";
+      } else if (updates.progress > 0) {
+        updates.status = "on-track";
+        if (goalDocument.quarterlyStatus === "not-started") {
+          updates.quarterlyStatus = "on-track";
+        }
+      }
     }
 
     Object.assign(goalDocument, updates);
@@ -251,10 +282,13 @@ export async function PUT(
       }
     }
 
+    const teamDoc = goal.team ? await Team.findById(goal.team).select("name").lean() : null;
+    const teamName = teamDoc ? (teamDoc as any).name : "No Team";
+
     await notifyAdmins({
       type: "Goal Created",
       title: "Goal Updated",
-      message: `"${goal.title}" was updated by ${session.name}.`,
+      message: `${session.name} updated the goal: ${goal.title} (${teamName})`,
       link: `/dashboard/goals?selected=${goalDocument._id}`,
       relatedGoal: goalDocument._id.toString(),
     });

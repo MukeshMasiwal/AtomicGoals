@@ -28,6 +28,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   Loader2,
+  XCircle,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
@@ -68,6 +69,8 @@ export default function GoalsClient({ user }: { user: any }) {
     goalWeightage: 10,
     isShared: false,
     assignedTo: [] as string[],
+    status: "not-started",
+    tasks: [] as { title: string; status: string; weightage: number | null }[],
   });
   const [detailGoal, setDetailGoal] = useState<any>(null);
   const [formError, setFormError] = useState("");
@@ -218,9 +221,9 @@ export default function GoalsClient({ user }: { user: any }) {
           bg: "bg-emerald-50 dark:bg-emerald-500/10",
           border: "border-emerald-200 dark:border-emerald-500/20",
         };
-      case "in-progress":
+      case "on-track":
         return {
-          label: "In Progress",
+          label: "On Track",
           icon: PlayCircle,
           color: "text-blue-500",
           bg: "bg-blue-50 dark:bg-blue-500/10",
@@ -275,6 +278,8 @@ export default function GoalsClient({ user }: { user: any }) {
       goalWeightage: 10,
       isShared: false,
       assignedTo: [],
+      status: "not-started",
+      tasks: [],
     });
     setIsModalOpen(true);
   };
@@ -297,6 +302,8 @@ export default function GoalsClient({ user }: { user: any }) {
       goalWeightage: goal.goalWeightage ?? 10,
       isShared: goal.isShared || false,
       assignedTo: (goal.assignedTo || []).map((u: any) => u?._id || u),
+      status: goal.status || "not-started",
+      tasks: goal.tasks || [],
     });
     setFormError("");
     setIsModalOpen(true);
@@ -431,6 +438,24 @@ export default function GoalsClient({ user }: { user: any }) {
         return;
       }
     }
+    if (formData.uom === "Percentage") {
+      const target = parseFloat(formData.plannedTargetValue);
+      if (isNaN(target) || target < 0 || target > 100) {
+        setFormError("Percentage target must be between 0 and 100.");
+        return;
+      }
+    }
+
+    if (formData.tasks.length < 1 || formData.tasks.length > 10) {
+      setFormError("You must provide between 1 and 10 tasks.");
+      return;
+    }
+    
+    if (formData.tasks.some(t => !t.title.trim())) {
+      setFormError("All tasks must have a title.");
+      return;
+    }
+
     if (!formData.assignedManager) {
       setFormError("Manager assignment is mandatory.");
       return;
@@ -440,6 +465,7 @@ export default function GoalsClient({ user }: { user: any }) {
     try {
       const payload = {
         ...formData,
+        numberOfTasks: formData.tasks.length,
         // Do not send client-specified goalWeightage; server will compute/derive effective weightage.
         goalWeightage: null,
         dueDate: formData.deadline
@@ -489,6 +515,36 @@ export default function GoalsClient({ user }: { user: any }) {
       setFormError("An unexpected error occurred.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const toggleTaskStatus = async (taskIndex: number) => {
+    if (!detailGoal || !canMutateGoal(detailGoal)) return;
+    const newTasks = [...(detailGoal.tasks || [])];
+    if (!newTasks[taskIndex]) return;
+
+    const currentStatus = newTasks[taskIndex].status;
+    newTasks[taskIndex].status = currentStatus === "Completed" ? "Pending" : "Completed";
+
+    // Optimistically update
+    const completedTasks = newTasks.filter((t: any) => t.status === "Completed").length;
+    const totalTasks = Math.max(newTasks.length, 1);
+    const progress = Math.round((completedTasks / totalTasks) * 100);
+    setDetailGoal({ ...detailGoal, tasks: newTasks, progress, numberOfTasks: totalTasks, tasksCompleted: completedTasks });
+
+    try {
+      const res = await fetch(`/api/goals/${detailGoal._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tasks: newTasks }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setGoals(goals.map((g) => (g._id === detailGoal._id ? { ...g, ...data.goal } : g)));
+        setDetailGoal((prev: any) => prev?._id === detailGoal._id ? { ...prev, ...data.goal } : prev);
+      }
+    } catch (err) {
+      console.error("Failed to update task status", err);
     }
   };
 
@@ -562,7 +618,7 @@ export default function GoalsClient({ user }: { user: any }) {
               >
                 <option value="all">All Statuses</option>
                 <option value="not-started">Not Started</option>
-                <option value="in-progress">In Progress</option>
+                <option value="on-track">On Track</option>
                 <option value="completed">Completed</option>
                 <option value="Pending Approval">Pending Approval</option>
                 <option value="Approved">Approved</option>
@@ -870,22 +926,47 @@ export default function GoalsClient({ user }: { user: any }) {
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Number of Tasks</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={formData.numberOfTasks}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        numberOfTasks: Math.max(1, Math.min(10, parseInt(e.target.value) || 1)),
-                      })
-                    }
-                    className="bg-muted/50 "
-                    disabled={editingGoal?.approvalStatus === "Approved" && user.role !== "admin"}
-                  />
+                <div className="space-y-4 col-span-2">
+                  <Label>Tasks (Up to 10)</Label>
+                  {formData.tasks.map((task, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <Input
+                        value={task.title}
+                        onChange={(e) => {
+                          const newTasks = [...formData.tasks];
+                          newTasks[idx].title = e.target.value;
+                          setFormData({ ...formData, tasks: newTasks });
+                        }}
+                        placeholder="Task title..."
+                        className="flex-1 bg-muted/50"
+                        disabled={editingGoal?.approvalStatus === "Approved" && user.role !== "admin"}
+                      />
+                      {!(editingGoal?.approvalStatus === "Approved" && user.role !== "admin") && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const newTasks = [...formData.tasks];
+                            newTasks.splice(idx, 1);
+                            setFormData({ ...formData, tasks: newTasks });
+                          }}
+                          className="text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  {formData.tasks.length < 10 && !(editingGoal?.approvalStatus === "Approved" && user.role !== "admin") && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, tasks: [...formData.tasks, { title: "", status: "Pending", weightage: null }] })}
+                      className="text-xs"
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> Add Task
+                    </Button>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>Goal Weightage (%)</Label>
@@ -1027,6 +1108,21 @@ export default function GoalsClient({ user }: { user: any }) {
                   <option value="zero">ZERO Type (E.g. 0 incidents)</option>
                 </select>
               </div>
+              <div className="space-y-2">
+                <Label>Goal Status</Label>
+                <select
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value })
+                  }
+                  disabled={editingGoal?.approvalStatus === "Approved" && user.role !== "admin"}
+                >
+                  <option value="not-started">Not Started</option>
+                  <option value="on-track">On Track</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
               {!editingGoal && (
                 <div className="space-y-2">
                   <Label className="text-xs text-amber-600 dark:text-amber-500">
@@ -1151,10 +1247,40 @@ export default function GoalsClient({ user }: { user: any }) {
                       : "No deadline"}
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-semibold text-foreground">Tasks</h4>
-                  <div className="text-sm text-muted-foreground">{detailGoal.numberOfTasks || 1} tasks planned</div>
-                </div>
+              <div className="space-y-2 col-span-2">
+                <h4 className="text-sm font-semibold text-foreground">Execution Tasks</h4>
+                {detailGoal.tasks && detailGoal.tasks.length > 0 ? (
+                  <div className="grid gap-2">
+                    {detailGoal.tasks.map((task: any, idx: number) => (
+                      <div key={idx} className="flex items-center gap-3 p-2 rounded-md border border-border bg-muted/20">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => toggleTaskStatus(idx)}
+                          className="h-6 w-6 shrink-0"
+                          disabled={!canMutateGoal(detailGoal)}
+                        >
+                          {task.status === "Completed" ? (
+                            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                          ) : (
+                            <div className="h-4 w-4 rounded-full border-2 border-slate-300" />
+                          )}
+                        </Button>
+                        <span className={`text-sm flex-1 ${task.status === "Completed" ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                          {task.title}
+                        </span>
+                        <Badge variant="slate" className="text-[10px] bg-transparent border-slate-300">
+                          {task.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    {detailGoal.numberOfTasks || 1} implicit tasks planned
+                  </div>
+                )}
+              </div>
                 <div className="space-y-1">
                   <h4 className="text-sm font-semibold text-foreground">Task Contribution</h4>
                   <div className="text-sm text-muted-foreground">

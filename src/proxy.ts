@@ -61,8 +61,7 @@ export default async function proxy(request: NextRequest) {
   const isPublic = isPublicPath(pathname);
 
   const isOnboarding = pathname === "/onboarding";
-  const isWaiting = pathname === "/waiting-approval";
-  const isRejectedRoute = pathname === "/rejected";
+
   const isDashboardRoute = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
   const isLogout = pathname === "/api/auth/logout" || pathname === "/logout";
 
@@ -96,7 +95,7 @@ export default async function proxy(request: NextRequest) {
       return redirectTo(targetPath, request);
     }
 
-    if (isOnboarding || isWaiting || isRejectedRoute) {
+    if (isOnboarding) {
       return redirectTo(targetPath, request);
     }
   }

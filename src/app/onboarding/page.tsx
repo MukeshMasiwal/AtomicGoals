@@ -59,7 +59,7 @@ export default function OnboardingPage() {
       setMessage("Profile setup complete! Redirecting...");
 
       setTimeout(() => {
-        router.push("/waiting-approval");
+        router.push("/dashboard");
         router.refresh();
       }, 1500);
     } catch {
@@ -83,7 +83,7 @@ export default function OnboardingPage() {
                     Onboarding in progress
                   </div>
                   <h1 className="max-w-md text-4xl font-semibold tracking-tight text-slate-950 dark:text-white">
-                    Set up your profile for the approval workflow.
+                    Set up your profile.
                   </h1>
                   <p className="max-w-lg text-base leading-7 text-slate-600 dark:text-slate-300">
                     This page keeps the existing onboarding logic intact while presenting a cleaner enterprise experience for new users.

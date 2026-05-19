@@ -21,16 +21,19 @@ export async function GET(req: Request) {
     let query: any = {};
 
     if (session.role === "manager") {
-      // Managers can only see logs for their team members
       const currentUser = await User.findById(session.id).select("department").lean() as any;
-      if (currentUser?.department) {
-        query.userRole = "employee"; // Managers primarily audit their team, but this can be simplified.
-        // Actually, we can just allow them to see it, but let's constrain it if needed.
-        // For now, if role === manager, let them see their departmental logs if we tracked department.
-        // But GoalAuditLog doesn't have department. Let's just fetch all logs for now, and filter on UI if needed, 
-        // or just restrict to the manager's department by joining.
-        // Given complexity, let's just fetch recent logs.
-      }
+      
+      // Managers should see logs for goals in their department or goals they manage/created
+      const managerGoals = await Goal.find({
+        $or: [
+          { department: currentUser?.department || "No Department" },
+          { assignedManager: session.id },
+          { creator: session.id }
+        ]
+      }).select("_id").lean();
+      
+      const goalIds = managerGoals.map(g => g._id);
+      query.goalId = { $in: goalIds };
     }
 
     if (search) {

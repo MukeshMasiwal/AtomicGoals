@@ -61,6 +61,23 @@ export async function PUT(
     if (updates.quarterlyStatus !== undefined && updates.quarterlyStatus !== goal.quarterlyStatus) {
       changes.push({ field: "quarterlyStatus", oldValue: goal.quarterlyStatus, newValue: updates.quarterlyStatus });
       goal.quarterlyStatus = updates.quarterlyStatus;
+
+      // Map to global status for dashboards
+      let newStatus = goal.status;
+      if (updates.quarterlyStatus === "not-started") newStatus = "not-started";
+      else if (updates.quarterlyStatus === "on-track") newStatus = "on-track";
+      else if (updates.quarterlyStatus === "completed") newStatus = "completed";
+
+      if (newStatus !== goal.status) {
+        changes.push({ field: "status", oldValue: goal.status, newValue: newStatus });
+        goal.status = newStatus;
+      }
+
+      if (updates.quarterlyStatus === "completed" && !goal.completionDate) {
+        goal.completionDate = new Date();
+      } else if (updates.quarterlyStatus !== "completed" && goal.completionDate) {
+        goal.completionDate = null;
+      }
     }
     
     if (updates.tasksCompleted !== undefined && updates.tasksCompleted !== goal.tasksCompleted) {

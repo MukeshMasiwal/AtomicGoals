@@ -106,18 +106,35 @@ export async function fetchDashboardData() {
       cta: "Review Goal",
     }));
 
-    // Build activity feed from recent goals
-    const dbActivityFeed = goals.slice(0, 5).map((g: any) => ({
-      id: String(g._id),
-      title: "Goal Updated",
-      description: `"${g.title}" was recently updated.`,
-      time: g.updatedAt
-        ? new Date(g.updatedAt).toLocaleDateString()
-        : "Recently",
-      actor: g.creator?.name || "System",
-      initials: (g.creator?.name || "SY").substring(0, 2).toUpperCase(),
-      type: "edited" as const,
+    // Build activity feed from recent audit logs
+    const { GoalAuditLog } = await import("@/models/GoalAuditLog");
+    const goalIds = goals.map(g => g._id);
+    const recentLogs = await GoalAuditLog.find({ goalId: { $in: goalIds } })
+      .sort({ timestamp: -1 })
+      .limit(5)
+      .lean();
+      
+    const dbActivityFeed = recentLogs.map((log: any) => ({
+      id: String(log._id),
+      title: log.action || "Goal Updated",
+      description: `"${log.taskName || log.goalTitle || "Goal"}" was updated.`,
+      time: log.timestamp ? new Date(log.timestamp).toLocaleDateString() : "Recently",
+      actor: log.userName || "System",
+      initials: (log.userName || "SY").substring(0, 2).toUpperCase(),
+      type: (log.action === "Task Completed" ? "approved" : "edited") as "approved" | "edited",
     }));
+
+    if (dbActivityFeed.length === 0) {
+      dbActivityFeed.push(...goals.slice(0, 5).map((g: any) => ({
+        id: String(g._id),
+        title: "Goal Created",
+        description: `"${g.title}" was recently created.`,
+        time: g.createdAt ? new Date(g.createdAt).toLocaleDateString() : "Recently",
+        actor: g.creator?.name || "System",
+        initials: (g.creator?.name || "SY").substring(0, 2).toUpperCase(),
+        type: "edited" as const,
+      })));
+    }
 
     const approvedCount = await Goal.countDocuments({ ...filter, approvalStatus: "Approved" });
     const pendingCount = await Goal.countDocuments({ ...filter, approvalStatus: "Pending Approval" });
@@ -128,20 +145,17 @@ export async function fetchDashboardData() {
     const managerReviewedCount = await Goal.countDocuments({ ...filter, approvalComments: { $exists: true, $ne: "" } });
 
     let dynamicKpis = mock.kpis;
-    if (role === "employee") {
-      dynamicKpis = [
-        { label: "Total Goals", value: goalCount, trend: "", tone: "up" },
-        { label: "Goals Approved", value: approvedCount, trend: "", tone: "up" },
-        { label: "Pending Check-ins", value: pendingCheckinCount, trend: "", tone: "down" },
-        { label: "Quarterly Score", value: (goals.reduce((acc, g: any) => acc + (g.score || 0), 0) / (goalCount || 1)).toFixed(1), trend: "", tone: "up" },
-      ];
-    } else {
-      dynamicKpis = [
-        { label: "Check-ins Complete", value: checkinCompletedCount, trend: `${Math.round((checkinCompletedCount / (goalCount || 1)) * 100)}% dept`, tone: "up" },
-        { label: "Pending Reviews", value: pendingCheckinCount, trend: "", tone: "down" },
-        { label: "Manager Reviewed", value: managerReviewedCount, trend: "", tone: "up" },
-      ];
-    }
+    
+    const activeGoalsCount = await Goal.countDocuments({ ...filter, approvalStatus: { $ne: "Rejected" }, status: { $ne: "completed" } });
+    const completedTasksCount = goals.reduce((acc, g: any) => acc + (g.tasksCompleted || 0), 0);
+    const avgKpiScore = (goals.reduce((acc, g: any) => acc + (g.score || 0), 0) / (goalCount || 1)).toFixed(1);
+
+    dynamicKpis = [
+      { label: "Active Goals", value: activeGoalsCount, trend: "", tone: "up" },
+      { label: "Completed Tasks", value: completedTasksCount, trend: "", tone: "up" },
+      { label: "KPI Score", value: avgKpiScore, trend: "", tone: "up" },
+      { label: "Achievement %", value: `${Math.round(avgProgress)}%`, trend: "", tone: "up" },
+    ];
 
     return {
       ...mock,

@@ -119,31 +119,20 @@ export function sessionPayloadToUser(payload: SessionPayload): SessionUser {
 export function resolveAuthRedirectPath(
   session: Pick<SessionPayload, "approvalStatus" | "onboardingCompleted" | "verified" | "isSeedUser">,
 ): AuthRedirectPath {
-  // Backwards-compatible default behavior (legacy callers)
-  const approval = session.approvalStatus;
   const onboardingCompleted = session.onboardingCompleted;
 
-  // If we don't have verified/isSeedUser flags, preserve previous routing
   if (typeof (session as any).verified === "undefined" && typeof (session as any).isSeedUser === "undefined") {
     if (!onboardingCompleted) return "/onboarding";
-    if (approval === "Approved") return "/dashboard";
-    if (approval === "Rejected") return "/rejected";
-    return "/waiting-approval";
+    return "/dashboard";
   }
 
   const verified = (session as any).verified as boolean;
   const isSeedUser = (session as any).isSeedUser as boolean;
 
-  // Seed/demo users always go straight to dashboard
   if (isSeedUser) return "/dashboard";
-
-  // New placeholder users or those who haven't finished setup should complete onboarding first
   if (!verified || !onboardingCompleted) return "/onboarding";
 
-  // Existing, verified users
-  if (approval === "Approved") return "/dashboard";
-  if (approval === "Rejected") return "/rejected";
-  return "/waiting-approval";
+  return "/dashboard";
 }
 
 export async function setSessionCookie(token: string): Promise<void> {

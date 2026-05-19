@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       department: department || "",
       onboardingCompleted: true,
       verified: true,
-      approvalStatus: "Pending Approval",
+      approvalStatus: "Approved",
     };
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -49,13 +49,12 @@ export async function POST(req: Request) {
 
     const { notifyAdmins } = await import("@/lib/notifications");
     await notifyAdmins({
-      type: "Employee Approved", // Or Team Member Added
-      title: "New User Application",
-      message: `New employee application submitted by ${fullName}`,
-      link: `/dashboard/team?approvalUser=${updatedUser._id}`,
+      type: "Employee Approved",
+      title: "New User Joined",
+      message: `${fullName} has joined the workspace.`,
+      link: `/dashboard/team`,
       relatedUser: updatedUser._id.toString(),
     });
-
 
     const newToken = await createSessionToken({
       id: updatedUser._id.toString(),
@@ -63,7 +62,7 @@ export async function POST(req: Request) {
       name: updatedUser.name,
       role: updatedUser.role,
       department: updatedUser.department,
-      approvalStatus: "Pending Approval" as const,
+      approvalStatus: "Approved" as const,
       onboardingCompleted: true,
       verified: true,
       isSeedUser: !!updatedUser.isSeedUser,

@@ -42,7 +42,7 @@ export default async function AnalyticsPage() {
 
   const totalGoals = goals.length;
   const completedGoals = goals.filter((g) => g.status === "completed").length;
-  const activeGoals = goals.filter((g) => g.status === "in-progress").length;
+  const activeGoals = goals.filter((g) => g.status === "in-progress" || g.status === "on-track").length;
   const overdueGoals = goals.filter(
     (g) => g.status !== "completed" && new Date(g.dueDate) < new Date(),
   ).length;

@@ -45,28 +45,49 @@ export function calculateKPIScore(
   deadline?: Date | null,
   completionDate?: Date | null,
 ): number {
-  if (type !== "timeline" && (target == null || actual == null)) {
+  if (type !== "timeline" && (target == null || actual == null || Number.isNaN(target) || Number.isNaN(actual))) {
     return 0;
   }
 
   let score = 0;
+  const numActual = Number(actual);
+  const numTarget = Number(target);
+
   if (type === "min") {
     // Higher is Better: actual / target
-    score = ((actual as number) / (target as number)) * 100;
+    if (numTarget === 0) {
+      score = numActual >= 0 ? 100 : 0;
+    } else {
+      score = (numActual / numTarget) * 100;
+    }
   } else if (type === "max") {
     // Lower is Better: target / actual
-    if (actual === 0) return 100; // Prevent divide by zero, assuming perfect score
-    score = ((target as number) / (actual as number)) * 100;
+    if (numActual === 0) {
+      score = numTarget >= 0 ? 100 : 0;
+    } else {
+      score = (numTarget / numActual) * 100;
+    }
   } else if (type === "timeline") {
     // Timeline Type
     if (deadline && completionDate) {
-      score = new Date(completionDate).getTime() <= new Date(deadline).getTime() ? 100 : 0;
+      const cDate = new Date(completionDate).getTime();
+      const dDate = new Date(deadline).getTime();
+      if (cDate <= dDate) {
+        score = 100;
+      } else {
+        const daysOverdue = Math.max(0, (cDate - dDate) / (1000 * 60 * 60 * 24));
+        score = Math.max(0, 100 - (daysOverdue * 5)); // Reduce score safely by 5 per day overdue
+      }
     } else {
       score = 0;
     }
   } else if (type === "zero") {
     // Zero Type (e.g. Incidents)
-    score = (actual as number) === 0 ? 100 : 0;
+    score = numActual === 0 ? 100 : 0;
+  }
+
+  if (Number.isNaN(score) || !Number.isFinite(score)) {
+    return 0;
   }
 
   return Math.min(Math.max(Math.round(score), 0), 100);

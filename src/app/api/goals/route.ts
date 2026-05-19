@@ -135,6 +135,16 @@ export async function POST(req: Request) {
       );
     }
 
+    if (uom === "Percentage" && plannedTargetValue !== undefined && plannedTargetValue !== "") {
+      const targetNum = Number(plannedTargetValue);
+      if (targetNum < 0 || targetNum > 100 || Number.isNaN(targetNum)) {
+        return NextResponse.json(
+          { error: "Percentage target must be between 0 and 100." },
+          { status: 400 }
+        );
+      }
+    }
+
     const parsedGoalWeightage =
       goalWeightage === undefined || goalWeightage === null || goalWeightage === ""
         ? null
@@ -329,6 +339,17 @@ export async function POST(req: Request) {
         }
       }
     }
+
+    const teamDoc = team ? await Team.findById(team).select("name").lean() : null;
+    const teamName = teamDoc ? (teamDoc as any).name : "No Team";
+
+    await notifyAdmins({
+      type: "Goal Created",
+      title: "Goal Created",
+      message: `${session.name} submitted a new goal: ${title} (${teamName})`,
+      link: `/dashboard/goals?selected=${goal._id}`,
+      relatedGoal: goal._id.toString(),
+    });
 
     return NextResponse.json({ success: true, goal: normalizeGoalForResponse(goal.toObject()) });
   } catch (error) {

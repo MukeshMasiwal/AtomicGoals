@@ -45,7 +45,7 @@ const goalSchema = new Schema(
     actualAchievement: { type: String, default: "" },
     status: {
       type: String,
-      enum: ["not-started", "in-progress", "completed", "at-risk"],
+      enum: ["not-started", "in-progress", "on-track", "completed", "at-risk"],
       default: "not-started",
     },
     approvalStatus: {
@@ -80,6 +80,11 @@ const goalSchema = new Schema(
     completionDate: { type: Date, default: null },
     completionPercentage: { type: Number, default: 0, min: 0, max: 100 },
     score: { type: Number, default: 0, min: 0, max: 100 },
+    tasks: [{
+      title: { type: String, required: true },
+      status: { type: String, enum: ["Pending", "In Progress", "Completed"], default: "Pending" },
+      weightage: { type: Number, default: null }
+    }],
   },
   { timestamps: true, collection: "goals" },
 );

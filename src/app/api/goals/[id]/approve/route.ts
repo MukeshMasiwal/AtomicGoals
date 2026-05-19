@@ -69,7 +69,7 @@ export async function POST(
 
     if (approvalStatus === "Approved") {
       // If approved and it was pending, status moves to in-progress or completed depending on progress
-      goal.status = goal.progress === 100 ? "completed" : "in-progress";
+      goal.status = goal.progress === 100 ? "completed" : "on-track";
     } else if (approvalStatus === "Rejected") {
       goal.status = "at-risk";
     }

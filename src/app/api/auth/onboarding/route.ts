@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       department,
       onboardingCompleted: true,
       verified: true,
-      approvalStatus: "Pending Approval",
+      approvalStatus: "Approved",
     };
 
     if (managerId) {
@@ -44,9 +44,9 @@ export async function POST(request: Request) {
     const { createNotification, notifyAdmins } = await import("@/lib/notifications");
 
     await notifyAdmins({
-      type: "Employee Approved", // Representing user app
-      title: "New User Application",
-      message: `New employee application submitted by ${firstName} ${lastName}`,
+      type: "Employee Approved",
+      title: "New User Joined",
+      message: `${firstName} ${lastName} has joined the workspace.`,
       link: "/dashboard/team",
       relatedUser: updatedUser._id.toString(),
     });
@@ -55,8 +55,8 @@ export async function POST(request: Request) {
     if (managerId) {
       await createNotification({
         type: "Employee Approved",
-        title: "New Team Member Application",
-        message: `${firstName} ${lastName} has selected you as their manager and is waiting for approval.`,
+        title: "New Team Member Joined",
+        message: `${firstName} ${lastName} has selected you as their manager.`,
         recipient: managerId,
         link: "/dashboard/team",
         relatedUser: updatedUser._id.toString(),
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       name: `${firstName} ${lastName}`,
       department,
       onboardingCompleted: true,
-      approvalStatus: "Pending Approval" as const,
+      approvalStatus: "Approved" as const,
       verified: true,
       isSeedUser: !!(session as any).isSeedUser,
     };
