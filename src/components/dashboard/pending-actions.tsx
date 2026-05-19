@@ -75,15 +75,15 @@ export default function PendingActions({ items }: PendingActionsProps) {
                 borderMap[item.tone],
               )}
             >
-              <CardContent className="flex flex-col h-full space-y-4 px-5 py-5">
+              <CardContent className="flex flex-col h-full space-y-3 px-4 py-4 sm:px-5 sm:py-5">
                 <div className="flex items-start gap-3">
                   <div
                     className={cn(
-                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                      "flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl",
                       iconBgMap[item.tone],
                     )}
                   >
-                    <Icon className="h-5 w-5" />
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-foreground line-clamp-2 break-words">
@@ -94,10 +94,10 @@ export default function PendingActions({ items }: PendingActionsProps) {
                     </p>
                   </div>
                 </div>
-                <div className="mt-auto pt-2">
+                <div className="mt-auto pt-1">
                   <Button
                     variant="outline"
-                    className="w-full justify-between rounded-xl h-auto py-2.5"
+                    className="w-full justify-between rounded-xl h-auto py-2 sm:py-2.5 text-xs sm:text-sm"
                     asChild
                   >
                     <Link href={`/dashboard/goals?selected=${item.id}`}>

@@ -81,6 +81,8 @@ export async function POST(request: Request) {
       department: user.department ?? "",
       approvalStatus: user.approvalStatus ?? "Pending Approval",
       onboardingCompleted: user.onboardingCompleted ?? false,
+      verified: (user as any).verified ?? true,
+      isSeedUser: true,
     };
 
     // Create session/token
@@ -90,6 +92,8 @@ export async function POST(request: Request) {
     const redirectTo = resolveAuthRedirectPath({
       approvalStatus: sessionUser.approvalStatus,
       onboardingCompleted: sessionUser.onboardingCompleted,
+      verified: sessionUser.verified,
+      isSeedUser: sessionUser.isSeedUser,
     });
 
     console.log("[AUTH] Seed login", {
@@ -116,6 +120,8 @@ export async function POST(request: Request) {
         department: sessionUser.department,
         approvalStatus: sessionUser.approvalStatus,
         onboardingCompleted: sessionUser.onboardingCompleted,
+        verified: sessionUser.verified,
+        isSeedUser: sessionUser.isSeedUser,
       }),
       redirectTo,
     });

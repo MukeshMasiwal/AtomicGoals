@@ -59,17 +59,17 @@ export default function RecentActivity({ items }: RecentActivityProps) {
               >
                 {!isLast ? (
                   <span
-                    className="absolute left-5 top-12 h-[calc(100%-2rem)] w-px bg-slate-200"
+                    className="absolute left-4 sm:left-5 top-10 sm:top-12 h-[calc(100%-1.5rem)] sm:h-[calc(100%-2rem)] w-px bg-slate-200"
                     aria-hidden
                   />
                 ) : null}
                 <div
                   className={cn(
-                    "relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                    "relative z-10 flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full",
                     config.color,
                   )}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </div>
                 <div className="min-w-0 flex-1 pt-0.5">
                   <div className="flex flex-wrap items-start justify-between gap-2">
@@ -81,9 +81,9 @@ export default function RecentActivity({ items }: RecentActivityProps) {
                   <p className="mt-1 text-sm text-muted-foreground">
                     {item.description}
                   </p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarFallback className="bg-muted text-[10px] font-semibold text-foreground/80">
+                  <div className="mt-1.5 sm:mt-2 flex items-center gap-2">
+                    <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
+                      <AvatarFallback className="bg-muted text-[9px] sm:text-[10px] font-semibold text-foreground/80">
                         {item.initials}
                       </AvatarFallback>
                     </Avatar>

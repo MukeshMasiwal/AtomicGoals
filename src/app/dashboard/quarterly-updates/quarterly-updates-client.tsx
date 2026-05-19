@@ -75,7 +75,9 @@ export default function QuarterlyUpdatesClient({ user, initialGoals, windowInfo 
 
       if (res.ok) {
         const { goal } = await res.json();
-        setGoals(goals.map(g => g._id === goalId ? { ...g, ...goal } : g));
+        setGoals((prevGoals) =>
+          prevGoals.map((g) => (g._id === goalId ? { ...g, ...goal } : g)),
+        );
         setEditingId(null);
       } else {
         const err = await res.json();
@@ -104,8 +106,13 @@ export default function QuarterlyUpdatesClient({ user, initialGoals, windowInfo 
 
       if (res.ok) {
         const { goal } = await res.json();
-        setGoals(goals.map(g => g._id === goalId ? { ...g, ...goal } : g));
-        setCommentValues({ ...commentValues, [goalId]: "" });
+        setGoals((prevGoals) =>
+          prevGoals.map((g) => (g._id === goalId ? { ...g, ...goal } : g)),
+        );
+        setCommentValues((prevValues: Record<string, string>) => ({
+          ...prevValues,
+          [goalId]: "",
+        }));
       } else {
         const err = await res.json();
         alert(err.error || "Failed to save.");

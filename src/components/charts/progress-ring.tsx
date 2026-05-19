@@ -18,8 +18,8 @@ export default function ProgressRing({
 
   return (
     <svg
-      height={size}
-      width={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className="w-24 h-24 sm:w-32 sm:h-32 md:w-[140px] md:h-[140px]"
       role="img"
       aria-label={`${value}% quarter progress`}
     >

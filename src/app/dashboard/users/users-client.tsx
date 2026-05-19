@@ -58,8 +58,8 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
         body: JSON.stringify({ role: newRole }),
       });
       if (res.ok) {
-        setUsers(
-          users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
+        setUsers((prevUsers) =>
+          prevUsers.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
         );
       }
     } catch (err) {
@@ -77,7 +77,7 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
     try {
       const res = await fetch(`/api/users/${userId}`, { method: "DELETE" });
       if (res.ok) {
-        setUsers(users.filter((u) => u.id !== userId));
+        setUsers((prevUsers) => prevUsers.filter((u) => u.id !== userId));
       } else {
         alert("Failed to delete user.");
       }
@@ -128,7 +128,7 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
         </div>
 
         <Card className="border-border shadow-sm">
-          <CardContent className="flex flex-col gap-4 p-4 sm:flex-row">
+          <CardContent className="flex flex-col md:flex-row gap-3 p-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -138,11 +138,11 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
                 className="pl-9"
               />
             </div>
-            <select
-              value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="flex h-10 w-full sm:w-48 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-            >
+              <select
+                value={departmentFilter}
+                onChange={(e) => setDepartmentFilter(e.target.value)}
+                className="h-10 w-full md:w-48 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              >
               <option value="All">All Departments</option>
               <option value="Engineering">Engineering</option>
               <option value="Product">Product</option>
@@ -159,7 +159,7 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
         </Card>
 
         <Card className="border-border shadow-sm overflow-hidden">
-          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <div className="hidden md:block -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
             <Table>
               <TableHeader className="bg-muted/20">
                 <TableRow>
@@ -372,6 +372,153 @@ export default function UsersClient({ sessionUser }: { sessionUser: any }) {
                 )}
               </TableBody>
             </Table>
+          </div>
+          
+          {/* Mobile View */}
+          <div className="md:hidden flex flex-col gap-4 p-4">
+            {loading ? (
+              <div className="py-8 text-center text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-indigo-500" />
+                Loading users...
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground">
+                No users found.
+              </div>
+            ) : (
+              filteredUsers.map((u) => (
+                <div key={u.id} className="flex flex-col gap-3 p-4 rounded-xl border border-border bg-card shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9 border border-border">
+                        <AvatarFallback className="bg-indigo-50 text-indigo-700 text-xs font-semibold">
+                          {u.name.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-foreground">{u.name}</span>
+                        <span className="text-[11px] text-muted-foreground">{u.email}</span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
+                      onClick={() => handleDeleteUser(u.id)}
+                      disabled={u.id === sessionUser.id}
+                    >
+                      <UserX className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[10px] uppercase text-muted-foreground font-semibold">Role</span>
+                      <select
+                        value={u.role}
+                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                        disabled={u.id === sessionUser.id}
+                        className="text-xs rounded border border-slate-200 bg-white px-2 py-1.5 text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 w-full dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <option value="employee">Employee</option>
+                        <option value="manager">Manager</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+                    
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[10px] uppercase text-muted-foreground font-semibold">Team</span>
+                      <select
+                        value={u.team || ""}
+                        onChange={async (e) => {
+                          const newTeam = e.target.value;
+                          const res = await fetch(`/api/users/${u.id}`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ team: newTeam || null }),
+                          });
+                          if (res.ok) {
+                            setUsers((prevUsers) =>
+                              prevUsers.map((user) =>
+                                user.id === u.id ? { ...user, team: newTeam } : user,
+                              ),
+                            );
+                          }
+                        }}
+                        className="text-xs rounded border border-slate-200 bg-white px-2 py-1.5 text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <option value="">No Team</option>
+                        {teams.map((t) => (
+                          <option key={t._id} value={t._id}>{t.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[10px] uppercase text-muted-foreground font-semibold">Manager</span>
+                      <select
+                        value={u.manager || ""}
+                        onChange={async (e) => {
+                          const newManager = e.target.value;
+                          const res = await fetch(`/api/users/${u.id}`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ manager: newManager || null }),
+                          });
+                          if (res.ok) {
+                            setUsers((prevUsers) =>
+                              prevUsers.map((user) =>
+                                user.id === u.id ? { ...user, manager: newManager } : user,
+                              ),
+                            );
+                          }
+                        }}
+                        className="text-xs rounded border border-slate-200 bg-white px-2 py-1.5 text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <option value="">No Manager</option>
+                        {users.filter((user) => user.role === "manager" || user.role === "admin").map((m) => (
+                          <option key={m.id} value={m.id}>{m.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[10px] uppercase text-muted-foreground font-semibold">Status</span>
+                      <select
+                        value={u.status}
+                        onChange={async (e) => {
+                          const newStatus = e.target.value;
+                          const res = await fetch(`/api/users/${u.id}`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ employeeStatus: newStatus }),
+                          });
+                          if (res.ok) {
+                            setUsers((prevUsers) =>
+                              prevUsers.map((user) =>
+                                user.id === u.id ? { ...user, status: newStatus } : user,
+                              ),
+                            );
+                          }
+                        }}
+                        className="text-xs rounded border border-slate-200 bg-white px-2 py-1.5 text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <option value="Active">Active</option>
+                        <option value="On Leave">On Leave</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mt-1">
+                    <Badge
+                      className={u.approvalStatus === "Pending Approval" ? "bg-amber-100 text-amber-700 border-amber-200 text-[10px]" : u.accountStatus === "Active" ? "bg-emerald-100 text-emerald-700 text-[10px]" : "bg-slate-100 text-slate-700 text-[10px]"}
+                      variant={null}
+                    >
+                      {u.approvalStatus === "Pending Approval" ? "Pending Approval" : u.accountStatus}
+                    </Badge>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </Card>
       </div>

@@ -4,13 +4,8 @@ import { resolveAuthRedirectPath } from "@/lib/auth";
 
 const SESSION_COOKIE = "goaltrack_session";
 
-const publicPaths = ["/", "/login", "/signup", "/forgot-password"];
-const publicPrefixes = ["/reset-password"];
+const publicPaths = ["/", "/login"];
 const publicApiPrefixes = [
-  "/api/auth/login",
-  "/api/auth/signup",
-  "/api/auth/forgot-password",
-  "/api/auth/reset-password",
   "/api/auth/send-otp",
   "/api/auth/verify-otp",
   "/api/auth/seed-login",
@@ -18,9 +13,6 @@ const publicApiPrefixes = [
 
 function isPublicPath(pathname: string): boolean {
   if (publicPaths.includes(pathname)) {
-    return true;
-  }
-  if (publicPrefixes.some((prefix) => pathname.startsWith(prefix))) {
     return true;
   }
   return publicApiPrefixes.some((prefix) => pathname.startsWith(prefix));
@@ -35,7 +27,7 @@ async function getSessionPayload(token: string) {
       token,
       new TextEncoder().encode(secret),
     );
-    return payload as { role?: string; approvalStatus?: string; onboardingCompleted?: boolean };
+    return payload as { role?: string; approvalStatus?: string; onboardingCompleted?: boolean; verified?: boolean; isSeedUser?: boolean };
   } catch {
     return null;
   }
@@ -82,13 +74,11 @@ export default async function proxy(request: NextRequest) {
           ? session.approvalStatus
           : "Pending Approval",
       onboardingCompleted: !!session.onboardingCompleted,
+      verified: !!session.verified,
+      isSeedUser: !!session.isSeedUser,
     });
 
-    const isAuthEntryPath =
-      pathname === "/login" ||
-      pathname === "/signup" ||
-      pathname === "/forgot-password" ||
-      pathname.startsWith("/reset-password");
+    const isAuthEntryPath = pathname === "/login";
 
     if (pathname === "/" && targetPath === "/dashboard") {
       return redirectTo("/dashboard", request);

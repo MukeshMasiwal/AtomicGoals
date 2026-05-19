@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Target,
   Users,
+  ClipboardList,
 } from "lucide-react";
 
 import { Logo } from "@/components/ui/logo";
@@ -62,6 +63,12 @@ const navItems: NavItem[] = [
     label: "Analytics",
     href: "/dashboard/analytics",
     icon: BarChart3,
+    roles: ["manager", "admin"],
+  },
+  {
+    label: "Audit Logs",
+    href: "/dashboard/audit",
+    icon: ClipboardList,
     roles: ["manager", "admin"],
   },
   {

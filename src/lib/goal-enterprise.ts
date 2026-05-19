@@ -344,20 +344,16 @@ export function resolveEnterpriseGoalWeights(goals: EnterpriseGoalLike[]): Enter
     };
   }
 
-  if (activeGoals.length > 10) {
+  if (activeGoals.length > 8) {
     return {
       valid: false,
-      error: "Maximum 10 goals allowed per employee.",
+      error: "Maximum 8 goals allowed per employee.",
     };
   }
 
   if (missingGoals.length === 0) {
-    if (Math.round(explicitTotal * 10) / 10 !== 100) {
-      return {
-        valid: false,
-        error: "Total goal weightage must equal 100%.",
-      };
-    }
+    // During drafting, it's fine if the total is < 100. It just can't be > 100.
+    // The final submission validation will check if it strictly equals 100%.
 
     const invalidGoal = explicitWeights.find((item) => (item.weightage ?? 0) < 10);
     if (invalidGoal) {
@@ -373,7 +369,7 @@ export function resolveEnterpriseGoalWeights(goals: EnterpriseGoalLike[]): Enter
         goalId: item.goalId,
         weightage: item.weightage ?? 0,
       })),
-      totalWeightage: 100,
+      totalWeightage: explicitTotal,
       activeGoalCount: activeGoals.length,
     };
   }

@@ -34,33 +34,33 @@ function GoalCard({ goal }: { goal: GoalItem }) {
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      className="rounded-xl border border-border bg-card p-4 shadow-sm transition hover:shadow-md"
+      className="rounded-lg border border-border bg-card p-3 shadow-sm transition hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="font-medium text-foreground">{goal.title}</p>
-        <Badge variant={statusToVariant[goal.status] ?? "slate"}>
+        <p className="font-semibold text-sm text-foreground line-clamp-2 leading-tight">{goal.title}</p>
+        <Badge variant={statusToVariant[goal.status] ?? "slate"} className="text-[10px] px-1.5 py-0">
           {goal.status}
         </Badge>
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-muted-foreground">
+      <div className="mt-2.5 grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
         <div>
-          <span className="block text-muted-foreground">Weightage</span>
-          <span className="font-medium text-slate-700 dark:text-slate-300">{goal.weight || "10%"}</span>
+          <span className="block">Weightage</span>
+          <span className="font-medium text-foreground">{goal.weight || "10%"}</span>
         </div>
         <div>
-          <span className="block text-muted-foreground">Deadline</span>
-          <span className="font-medium text-slate-700 dark:text-slate-300">{goal.deadline}</span>
+          <span className="block">Deadline</span>
+          <span className="font-medium text-foreground">{goal.deadline}</span>
         </div>
       </div>
-      <div className="mt-4 space-y-2">
-        <div className="flex justify-between text-xs">
+      <div className="mt-2.5 space-y-1.5">
+        <div className="flex justify-between text-[10px] sm:text-xs">
           <span className="text-muted-foreground">Progress</span>
-          <span className="font-semibold text-slate-700 dark:text-slate-300">{goal.progress}%</span>
+          <span className="font-medium text-foreground">{goal.progress}%</span>
         </div>
-        <Progress value={goal.progress} />
+        <Progress value={goal.progress} className="h-1.5" />
       </div>
-      <p className="mt-3 text-xs text-muted-foreground">
-        Approval: <span className="text-foreground/80">{goal.approval}</span>
+      <p className="mt-2.5 pt-2 border-t border-border/50 text-[10px] sm:text-[11px] text-muted-foreground">
+        Approval: <span className="font-medium text-foreground/80">{goal.approval}</span>
       </p>
     </motion.div>
   );

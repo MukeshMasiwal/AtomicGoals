@@ -37,9 +37,11 @@ export default function GoalsClient({ user }: { user: any }) {
 
   const [goals, setGoals] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [managersList, setManagersList] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterManager, setFilterManager] = useState("all");
@@ -56,11 +58,16 @@ export default function GoalsClient({ user }: { user: any }) {
     title: "",
     description: "",
     numberOfTasks: 1,
-    goalWeightage: 10,
     deadline: "",
     team: "",
     assignedManager: "",
     kpiType: "min",
+    thrustArea: "",
+    uom: "Numeric",
+    plannedTargetValue: "",
+    goalWeightage: 10,
+    isShared: false,
+    assignedTo: [] as string[],
   });
   const [detailGoal, setDetailGoal] = useState<any>(null);
   const [formError, setFormError] = useState("");
@@ -98,10 +105,11 @@ export default function GoalsClient({ user }: { user: any }) {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [goalsRes, usersRes, teamsRes] = await Promise.all([
+        const [goalsRes, usersRes, teamsRes, managersRes] = await Promise.all([
           fetch("/api/goals"),
           fetch("/api/users"),
           fetch("/api/teams"),
+          fetch("/api/users/managers")
         ]);
         if (goalsRes.ok) {
           const data = await goalsRes.json();
@@ -114,6 +122,10 @@ export default function GoalsClient({ user }: { user: any }) {
         if (teamsRes.ok) {
           const data = await teamsRes.json();
           setTeams(data.teams);
+        }
+        if (managersRes.ok) {
+          const data = await managersRes.json();
+          setManagersList(data.managers || []);
         }
       } catch (err) {
         console.error(err);
@@ -131,37 +143,44 @@ export default function GoalsClient({ user }: { user: any }) {
     }
   }, [selectedId, goals]);
 
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search || ""), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const filteredGoals = useMemo(() => {
+    const s = (debouncedSearch || "").toLowerCase();
     return goals.filter((g) => {
-      // Search
-      const s = search.toLowerCase();
-      const matchesSearch =
-        !search ||
-        g.title.toLowerCase().includes(s) ||
-        (g.creator?.name || "").toLowerCase().includes(s) ||
-        g.approvalStatus.toLowerCase().includes(s);
+      try {
+        // Search (safe guards for missing fields)
+        const title = (g.title || "").toString().toLowerCase();
+        const creatorName = (g.creator?.name || "").toString().toLowerCase();
+        const approval = (g.approvalStatus || "").toString().toLowerCase();
 
-      // Filters
-      const matchesDept =
-        filterDepartment === "all" ||
-        (g.department || "").toLowerCase() === filterDepartment.toLowerCase() ||
-        (g.creator?.department || "").toLowerCase() ===
-          filterDepartment.toLowerCase();
-      const matchesStatus =
-        filterStatus === "all" ||
-        g.status === filterStatus ||
-        g.approvalStatus === filterStatus;
-      const matchesManager =
-        filterManager === "all" ||
-        g.assignedManager?._id === filterManager ||
-        g.assignedManager === filterManager;
+        const matchesSearch = !s || title.includes(s) || creatorName.includes(s) || approval.includes(s);
 
-      return matchesSearch && matchesDept && matchesStatus && matchesManager;
+        // Filters (safe guards)
+        const dept = (g.department || g.creator?.department || "").toString().toLowerCase();
+        const matchesDept =
+          filterDepartment === "all" || dept === filterDepartment.toLowerCase();
+
+        const matchesStatus =
+          filterStatus === "all" || (g.status || "") === filterStatus || (g.approvalStatus || "") === filterStatus;
+
+        const matchesManager =
+          filterManager === "all" || (g.assignedManager?._id === filterManager) || (g.assignedManager === filterManager);
+
+        return matchesSearch && matchesDept && matchesStatus && matchesManager;
+      } catch (err) {
+        // If any goal has unexpected shape, exclude it safely without crashing
+        console.warn("Goal filter error", err, g);
+        return false;
+      }
     });
-  }, [goals, search, filterDepartment, filterStatus, filterManager]);
+  }, [goals, debouncedSearch, filterDepartment, filterStatus, filterManager]);
 
-  const activeEmployeeGoalCount = useMemo(() => {
-    if (user.role !== "employee") return 0;
+  const activeEmployeeGoals = useMemo(() => {
+    if (user.role !== "employee") return [];
 
     return goals.filter((goal) => {
       const goalTeamId = goal.team?._id || goal.team || "";
@@ -172,8 +191,22 @@ export default function GoalsClient({ user }: { user: any }) {
         isActiveGoal(goal) &&
         (creatorId === user.id || assignedToIds.includes(user.id) || goalTeamId === currentUserTeamId)
       );
-    }).length;
+    });
   }, [goals, user.role, user.id, currentUserTeamId]);
+
+  const activeEmployeeGoalCount = useMemo(() => {
+    return activeEmployeeGoals.length;
+  }, [activeEmployeeGoals]);
+
+  const draftGoals = useMemo(() => {
+    return activeEmployeeGoals.filter((g) => g.approvalStatus === "Draft");
+  }, [activeEmployeeGoals]);
+
+  const totalGoalWeightage = useMemo(() => {
+    return activeEmployeeGoals.reduce((sum, g) => sum + (g.goalWeightage || 10), 0);
+  }, [activeEmployeeGoals]);
+
+  const canSubmitGoalSheet = draftGoals.length > 0 && totalGoalWeightage === 100 && activeEmployeeGoalCount <= 8;
 
   function getStatusDetails(status: string) {
     switch (status?.toLowerCase()) {
@@ -232,11 +265,16 @@ export default function GoalsClient({ user }: { user: any }) {
       title: "",
       description: "",
       numberOfTasks: 1,
-      goalWeightage: 10,
       deadline: "",
       team: "",
       assignedManager: "",
       kpiType: "min",
+      thrustArea: "",
+      uom: "Numeric",
+      plannedTargetValue: "",
+      goalWeightage: 10,
+      isShared: false,
+      assignedTo: [],
     });
     setIsModalOpen(true);
   };
@@ -244,20 +282,49 @@ export default function GoalsClient({ user }: { user: any }) {
   const handleOpenEdit = (goal: any, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingGoal(goal);
+    setFormError("");
     setFormData({
-      title: goal.title,
+      title: goal.title || "",
       description: goal.description || "",
       numberOfTasks: goal.numberOfTasks || 1,
-      goalWeightage: goal.goalWeightage ?? 10,
-      deadline: goal.dueDate
-        ? new Date(goal.dueDate).toISOString().split("T")[0]
-        : "",
+      deadline: goal.dueDate ? new Date(goal.dueDate).toISOString().split("T")[0] : "",
       team: goal.team?._id || goal.team || "",
       assignedManager: goal.assignedManager?._id || goal.assignedManager || "",
       kpiType: goal.kpiType || "min",
+      thrustArea: goal.thrustArea || "",
+      uom: goal.uom || "Numeric",
+      plannedTargetValue: goal.plannedTargetValue ?? "",
+      goalWeightage: goal.goalWeightage ?? 10,
+      isShared: goal.isShared || false,
+      assignedTo: (goal.assignedTo || []).map((u: any) => u?._id || u),
     });
     setFormError("");
     setIsModalOpen(true);
+  };
+
+  const handleSubmitGoalSheet = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/goals/submit-sheet", {
+        method: "POST"
+      });
+      if (res.ok) {
+        // Refresh goals
+        const goalsRes = await fetch("/api/goals");
+        if (goalsRes.ok) {
+          const data = await goalsRes.json();
+          setGoals(data.goals);
+        }
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || "Failed to submit goal sheet.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An unexpected error occurred.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const openApprovalModal = (
@@ -324,19 +391,7 @@ export default function GoalsClient({ user }: { user: any }) {
       setFormError("Deadline is required.");
       return;
     }
-    const parsedWeightage = Number(formData.goalWeightage || 0);
-    if (Number.isNaN(parsedWeightage)) {
-      setFormError("Goal weightage must be a number.");
-      return;
-    }
-    if (parsedWeightage < 10) {
-      setFormError("Each goal must have at least 10% weightage.");
-      return;
-    }
-    if (parsedWeightage > 100) {
-      setFormError("Goal weightage cannot exceed 100%.");
-      return;
-    }
+    // Goal weightage is managed automatically; clients should not supply it.
 
     if (user.role === "employee") {
       const activeEmployeeGoals = goals.filter((goal) => {
@@ -364,9 +419,14 @@ export default function GoalsClient({ user }: { user: any }) {
     const currentDeadline = editingGoal?.dueDate ? new Date(editingGoal.dueDate).toISOString().split("T")[0] : null;
 
     if (!editingGoal || formData.deadline !== currentDeadline) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (parsedDeadline < today) {
+      // Parse local date from YYYY-MM-DD
+      const [year, month, day] = formData.deadline.split("-").map(Number);
+      const parsedDeadlineLocal = new Date(year, month - 1, day);
+      
+      const todayLocal = new Date();
+      todayLocal.setHours(0, 0, 0, 0);
+      
+      if (parsedDeadlineLocal < todayLocal) {
         setFormError("Deadline cannot be set in the past.");
         return;
       }
@@ -380,7 +440,8 @@ export default function GoalsClient({ user }: { user: any }) {
     try {
       const payload = {
         ...formData,
-        goalWeightage: parsedWeightage,
+        // Do not send client-specified goalWeightage; server will compute/derive effective weightage.
+        goalWeightage: null,
         dueDate: formData.deadline
           ? new Date(formData.deadline).toISOString()
           : null,
@@ -431,10 +492,13 @@ export default function GoalsClient({ user }: { user: any }) {
     }
   };
 
-  const managers = users.filter(
-    (u) => u.role === "manager" || u.role === "admin",
-  );
-  const todayString = new Date().toISOString().split("T")[0];
+  const managers = managersList;
+  // Get local today string for min date
+  const now = new Date();
+  const localYear = now.getFullYear();
+  const localMonth = String(now.getMonth() + 1).padStart(2, '0');
+  const localDay = String(now.getDate()).padStart(2, '0');
+  const todayString = `${localYear}-${localMonth}-${localDay}`;
 
   return (
     <DashboardShell
@@ -447,17 +511,31 @@ export default function GoalsClient({ user }: { user: any }) {
       <div className="w-full min-w-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-foreground ">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground ">
               Team Goals
             </h2>
-            <p className="text-muted-foreground dark:text-muted-foreground text-sm mt-1">
+            <p className="text-muted-foreground dark:text-muted-foreground text-xs sm:text-sm mt-1">
               Manage, track, and approve objectives for your organization.
             </p>
           </div>
-          <div className="flex w-full gap-3 sm:w-auto">
+          <div className="flex flex-col sm:flex-row w-full gap-3 sm:w-auto items-center">
+            {user.role === "employee" && draftGoals.length > 0 && (
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className={`text-xs font-medium px-3 py-1.5 rounded-md border ${totalGoalWeightage === 100 ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>
+                  Total Weight: {totalGoalWeightage}%
+                </div>
+                <Button
+                  onClick={handleSubmitGoalSheet}
+                  disabled={!canSubmitGoalSheet || saving}
+                  className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900"
+                >
+                  Submit Goal Sheet
+                </Button>
+              </div>
+            )}
             <Button
               onClick={handleOpenCreate}
-              disabled={user.role === "employee" && activeEmployeeGoalCount >= 10}
+              disabled={user.role === "employee" && activeEmployeeGoalCount >= 8}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-sm"
             >
               <Plus className="h-4 w-4" /> Create Goal
@@ -467,20 +545,20 @@ export default function GoalsClient({ user }: { user: any }) {
 
         <Card className="border-border/60 shadow-sm bg-card/50 backdrop-blur-xl ">
           <CardContent className="flex flex-col gap-4 p-4 md:flex-row">
-            <div className="relative flex-1">
+            <div className="relative flex-1 w-full md:w-auto">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search goals by title, status, or owner..."
-                className="pl-9 bg-card border-border w-full"
+                placeholder="Search goals..."
+                className="pl-9 h-9 sm:h-10 text-sm bg-card border-border w-full"
               />
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="grid grid-cols-2 md:flex gap-2 sm:gap-3 w-full md:w-auto">
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                className="h-9 sm:h-10 w-full rounded-md border border-slate-200 bg-white px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
               >
                 <option value="all">All Statuses</option>
                 <option value="not-started">Not Started</option>
@@ -495,7 +573,7 @@ export default function GoalsClient({ user }: { user: any }) {
                 <select
                   value={filterDepartment}
                   onChange={(e) => setFilterDepartment(e.target.value)}
-                  className="h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="h-9 sm:h-10 w-full rounded-md border border-slate-200 bg-white px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                 >
                   <option value="all">All Departments</option>
                   <option value="Engineering">Engineering</option>
@@ -508,7 +586,7 @@ export default function GoalsClient({ user }: { user: any }) {
               <select
                 value={filterManager}
                 onChange={(e) => setFilterManager(e.target.value)}
-                className="h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 max-w-[200px] truncate"
+                className="h-9 sm:h-10 w-full col-span-2 md:col-span-1 rounded-md border border-slate-200 bg-white px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 truncate md:max-w-[200px]"
               >
                 <option value="all">All Managers</option>
                 {managers.map((m) => (
@@ -522,7 +600,7 @@ export default function GoalsClient({ user }: { user: any }) {
         </Card>
 
         <Card className="border-border/60 shadow-sm bg-card/80 backdrop-blur-xl overflow-hidden">
-          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <div className="hidden md:block -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
             <Table>
               <TableHeader className="bg-muted/20 dark:bg-slate-800/50">
                 <TableRow className="border-border hover:bg-transparent">
@@ -631,21 +709,124 @@ export default function GoalsClient({ user }: { user: any }) {
               </TableBody>
             </Table>
           </div>
+
+          <div className="md:hidden flex flex-col gap-2 p-2 sm:p-4">
+            {loading ? (
+              <div className="py-12 text-center text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-indigo-500" />
+                Loading goals...
+              </div>
+            ) : filteredGoals.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground">
+                No goals found.
+              </div>
+            ) : (
+              filteredGoals.map((goal) => {
+                const status = getStatusDetails(goal.status);
+                const StatusIcon = status.icon;
+                return (
+                  <div
+                    key={goal._id}
+                    className="flex flex-col gap-2 p-3 rounded-lg border border-border bg-card shadow-sm cursor-pointer hover:bg-muted/30 transition-colors"
+                    onClick={() => setDetailGoal(goal)}
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <span className="font-semibold text-foreground text-sm line-clamp-2 leading-tight">
+                        {goal.title}
+                      </span>
+                      {canMutateGoal(goal) && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => handleOpenEdit(goal, e)}
+                          className="h-6 w-6 text-muted-foreground hover:text-indigo-600 shrink-0"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                      <Badge variant={null} className={`text-[9px] sm:text-[10px] font-medium border px-1 py-0 ${getApprovalBadge(goal.approvalStatus)}`}>
+                        {goal.approvalStatus}
+                      </Badge>
+                      <div className={`inline-flex items-center gap-1 px-1.5 py-0 rounded-full text-[9px] sm:text-[10px] font-medium border ${status.bg} ${status.color} ${status.border}`}>
+                        <StatusIcon className="h-2.5 w-2.5" />
+                        {status.label}
+                      </div>
+                    </div>
+                    <div className="space-y-1 mt-1.5">
+                      <div className="flex items-center justify-between text-[10px] sm:text-xs text-muted-foreground">
+                        <span>Progress</span>
+                        <span className="font-medium text-foreground">{goal.progress}%</span>
+                      </div>
+                      <Progress value={goal.progress} className="h-1" />
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-muted-foreground mt-2 border-t border-border/50 pt-2">
+                      <span className="truncate pr-2">Mgr: {goal.creator?.name || "Unknown"}</span>
+                      {goal.dueDate && <span className="shrink-0">Due: {new Date(goal.dueDate).toLocaleDateString()}</span>}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </Card>
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="max-h-[calc(100vh-2rem)] w-[min(100vw-2rem,28rem)] overflow-y-auto rounded-xl border border-border bg-card p-5 shadow-xl animate-in zoom-in-95 duration-200 sm:p-6">
-            <div className="mb-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm p-0 sm:p-4">
+          <div className="flex flex-col max-h-[85vh] sm:max-h-[calc(100vh-2rem)] w-full sm:w-[min(100vw-2rem,28rem)] rounded-t-2xl sm:rounded-xl border border-border bg-card shadow-xl animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+            <div className="p-4 sm:p-6 pb-3 border-b border-border/50 shrink-0">
               <h3 className="text-lg font-semibold tracking-tight text-foreground ">
                 {editingGoal ? "Edit Goal" : "Create Goal"}
               </h3>
             </div>
-            <div className="grid gap-4 py-4">
+            <div className="overflow-y-auto p-4 sm:p-6 grid gap-4">
               {formError && (
                 <div className="p-3 text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-md dark:bg-rose-900/30 dark:border-rose-800 dark:text-rose-400">
                   {formError}
+                </div>
+              )}
+              {editingGoal?.approvalStatus === "Approved" && user.role !== "admin" && (
+                <div className="p-3 text-sm text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-md dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400">
+                  This goal is Approved and locked. You cannot modify its core details.
+                </div>
+              )}
+              {user.role !== "employee" && (
+                <div className="space-y-4 p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="isShared"
+                      checked={formData.isShared}
+                      onChange={(e) => setFormData({ ...formData, isShared: e.target.checked })}
+                      className="w-4 h-4 text-indigo-600 rounded border-slate-300"
+                      disabled={editingGoal?.approvalStatus === "Approved" && user.role !== "admin"}
+                    />
+                    <Label htmlFor="isShared" className="font-semibold cursor-pointer">
+                      Create as Shared/Departmental Goal
+                    </Label>
+                  </div>
+                  {formData.isShared && (
+                    <div className="space-y-2">
+                      <Label>Assign To (Hold Ctrl/Cmd to select multiple)</Label>
+                      <select
+                        multiple
+                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 min-h-[100px]"
+                        value={formData.assignedTo}
+                        onChange={(e) => {
+                          const values = Array.from(e.target.selectedOptions, option => option.value);
+                          setFormData({ ...formData, assignedTo: values });
+                        }}
+                        disabled={editingGoal?.approvalStatus === "Approved" && user.role !== "admin"}
+                      >
+                        {users.filter(u => u.role === "employee" || u.role === "manager").map(u => (
+                          <option key={u.id} value={u.id}>{u.name} ({u.department || 'No Dept'})</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-muted-foreground">Each selected employee will receive their own linked copy of this goal.</p>
+                    </div>
+                  )}
                 </div>
               )}
               <div className="space-y-2">
@@ -659,6 +840,21 @@ export default function GoalsClient({ user }: { user: any }) {
                   }
                   placeholder="E.g. Launch new feature"
                   className="bg-muted/50 "
+                  disabled={(editingGoal?.approvalStatus === "Approved" && user.role !== "admin") || (editingGoal?.isShared && editingGoal?.primaryOwnerId !== user.id)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>
+                  Thrust Area
+                </Label>
+                <Input
+                  value={formData.thrustArea}
+                  onChange={(e) =>
+                    setFormData({ ...formData, thrustArea: e.target.value })
+                  }
+                  placeholder="E.g. Revenue Growth, Operational Efficiency"
+                  className="bg-muted/50 "
+                  disabled={(editingGoal?.approvalStatus === "Approved" && user.role !== "admin") || (editingGoal?.isShared && editingGoal?.primaryOwnerId !== user.id)}
                 />
               </div>
               <div className="space-y-2">
@@ -670,6 +866,7 @@ export default function GoalsClient({ user }: { user: any }) {
                   }
                   placeholder="Details about the goal..."
                   className="w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]"
+                  disabled={editingGoal?.approvalStatus === "Approved" && user.role !== "admin"}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -687,27 +884,57 @@ export default function GoalsClient({ user }: { user: any }) {
                       })
                     }
                     className="bg-muted/50 "
+                    disabled={editingGoal?.approvalStatus === "Approved" && user.role !== "admin"}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>
-                    Goal Weightage <span className="text-red-500">*</span>
-                  </Label>
+                  <Label>Goal Weightage (%)</Label>
                   <Input
                     type="number"
                     min="10"
                     max="100"
-                    step="1"
                     value={formData.goalWeightage}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        goalWeightage: Math.max(10, Math.min(100, parseInt(e.target.value) || 10)),
+                        goalWeightage: Math.max(0, Math.min(100, parseInt(e.target.value) || 0)),
                       })
                     }
                     className="bg-muted/50 "
+                    disabled={editingGoal?.approvalStatus === "Approved" && user.role !== "admin"}
                   />
-                  <p className="text-xs text-muted-foreground">Each goal must contribute at least 10% and all active goals should total 100%.</p>
+                  <p className="text-xs text-muted-foreground mt-1">Minimum 10%.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Target Value</Label>
+                  <Input
+                    type="number"
+                    value={formData.plannedTargetValue}
+                    onChange={(e) =>
+                      setFormData({ ...formData, plannedTargetValue: e.target.value })
+                    }
+                    placeholder="E.g. 100000"
+                    className="bg-muted/50 "
+                    disabled={(editingGoal?.approvalStatus === "Approved" && user.role !== "admin") || (editingGoal?.isShared && editingGoal?.primaryOwnerId !== user.id)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Unit of Measurement</Label>
+                  <select
+                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                    value={formData.uom}
+                    onChange={(e) =>
+                      setFormData({ ...formData, uom: e.target.value })
+                    }
+                    disabled={(editingGoal?.approvalStatus === "Approved" && user.role !== "admin") || (editingGoal?.isShared && editingGoal?.primaryOwnerId !== user.id)}
+                  >
+                    <option value="Numeric">Numeric</option>
+                    <option value="Percentage">Percentage (%)</option>
+                    <option value="Timeline">Timeline</option>
+                    <option value="Zero-Based">Zero-Based</option>
+                  </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -723,6 +950,7 @@ export default function GoalsClient({ user }: { user: any }) {
                       setFormData({ ...formData, deadline: e.target.value })
                     }
                     className="bg-muted/50 "
+                    disabled={editingGoal?.approvalStatus === "Approved" && user.role !== "admin"}
                   />
                 </div>
               </div>
@@ -739,13 +967,20 @@ export default function GoalsClient({ user }: { user: any }) {
                       assignedManager: e.target.value,
                     })
                   }
+                  disabled={managers.length === 0 || (editingGoal?.approvalStatus === "Approved" && user.role !== "admin")}
                 >
-                  <option value="">Select a Manager</option>
-                  {managers.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name}
-                    </option>
-                  ))}
+                  {managers.length === 0 ? (
+                    <option value="">No managers available</option>
+                  ) : (
+                    <>
+                      <option value="">Select a Manager</option>
+                      {managers.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </>
+                  )}
                 </select>
               </div>
               <div className="space-y-2">
@@ -758,13 +993,20 @@ export default function GoalsClient({ user }: { user: any }) {
                   onChange={(e) =>
                     setFormData({ ...formData, team: e.target.value })
                   }
+                  disabled={teams.length === 0 || (editingGoal?.approvalStatus === "Approved" && user.role !== "admin")}
                 >
-                  <option value="">Select a Team</option>
-                  {teams.map((t) => (
-                    <option key={t._id} value={t._id}>
-                      {t.name}
-                    </option>
-                  ))}
+                  {teams.length === 0 ? (
+                    <option value="">No teams available</option>
+                  ) : (
+                    <>
+                      <option value="">Select a Team</option>
+                      {teams.map((t) => (
+                        <option key={t._id} value={t._id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </>
+                  )}
                 </select>
               </div>
               <div className="space-y-2">
@@ -777,6 +1019,7 @@ export default function GoalsClient({ user }: { user: any }) {
                   onChange={(e) =>
                     setFormData({ ...formData, kpiType: e.target.value })
                   }
+                  disabled={(editingGoal?.approvalStatus === "Approved" && user.role !== "admin") || (editingGoal?.isShared && editingGoal?.primaryOwnerId !== user.id)}
                 >
                   <option value="min">MIN Type (Higher is Better, e.g. Sales)</option>
                   <option value="max">MAX Type (Lower is Better, e.g. Cost)</option>
@@ -792,35 +1035,42 @@ export default function GoalsClient({ user }: { user: any }) {
                 </div>
               )}
             </div>
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100 ">
+            <div className="flex justify-end gap-3 p-4 sm:p-5 border-t border-border bg-muted/20 shrink-0 sm:rounded-b-xl">
               <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button
-                onClick={handleSave}
-                disabled={!formData.title || saving}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white"
-              >
-                {saving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Save changes"
-                )}
-              </Button>
+              {!(editingGoal?.isLocked || (editingGoal?.approvalStatus === "Approved" && user.role !== "admin")) && (
+                <Button
+                  onClick={handleSave}
+                  disabled={!formData.title || saving}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Goal"
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </div>
       )}
 
       {approvalModalGoal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="max-h-[calc(100vh-2rem)] w-[min(100vw-2rem,24rem)] overflow-y-auto rounded-xl border border-border bg-card p-5 shadow-xl animate-in zoom-in-95 duration-200 sm:p-6">
-            <h3 className="text-lg font-semibold tracking-tight text-foreground mb-4">
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm p-0 sm:p-4">
+          <div className="flex flex-col max-h-[85vh] sm:max-h-[calc(100vh-2rem)] w-full sm:w-[min(100vw-2rem,24rem)] rounded-t-2xl sm:rounded-xl border border-border bg-card shadow-xl animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+            <div className="p-4 sm:p-6 pb-3 border-b border-border/50 shrink-0">
+              <h3 className="text-lg font-semibold tracking-tight text-foreground">
               {approvalModalStatus === "Approved"
                 ? "Approve Goal"
                 : "Reject Goal"}
             </h3>
-            <div className="space-y-4">
+            </div>
+            <div className="overflow-y-auto p-4 sm:p-6 grid gap-4">
               <div className="space-y-2">
                 <Label>Comments (Optional)</Label>
                 <textarea
@@ -831,7 +1081,7 @@ export default function GoalsClient({ user }: { user: any }) {
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="flex justify-end gap-3 p-4 sm:p-5 border-t border-border bg-muted/20 shrink-0 sm:rounded-b-xl">
               <Button
                 variant="outline"
                 onClick={() => setApprovalModalGoal(null)}
@@ -859,9 +1109,10 @@ export default function GoalsClient({ user }: { user: any }) {
       )}
 
       {detailGoal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-card p-6 rounded-xl shadow-xl w-full max-w-lg border border-border max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
-            <div className="mb-4 flex justify-between items-start">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm p-0 sm:p-4">
+          <div className="flex flex-col max-h-[90vh] sm:max-h-[85vh] w-full sm:max-w-lg rounded-t-2xl sm:rounded-xl border border-border bg-card shadow-xl animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+            <div className="p-4 sm:p-6 overflow-y-auto">
+              <div className="mb-4 flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-4">
               <div>
                 <h3 className="text-xl font-bold tracking-tight text-foreground ">
                   {detailGoal.title}
@@ -891,12 +1142,7 @@ export default function GoalsClient({ user }: { user: any }) {
                   <h4 className="text-sm font-semibold text-foreground">Status</h4>
                   <div className="text-sm text-muted-foreground">{detailGoal.status || "Not Started"}</div>
                 </div>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-semibold text-foreground">Goal Weightage</h4>
-                  <div className="text-sm text-muted-foreground">
-                    {detailGoal.effectiveGoalWeightage ?? detailGoal.goalWeightage ?? 10}%
-                  </div>
-                </div>
+                {/* Goal Weightage display removed (computed automatically) */}
                 <div className="space-y-1">
                   <h4 className="text-sm font-semibold text-foreground">Deadline</h4>
                   <div className="text-sm text-muted-foreground">
@@ -958,7 +1204,8 @@ export default function GoalsClient({ user }: { user: any }) {
               )}
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-slate-800/50 sm:flex-row sm:justify-end">
+            </div>
+            <div className="flex flex-col gap-3 p-4 sm:p-6 border-t border-border bg-muted/20 sticky bottom-0 sm:flex-row sm:justify-end rounded-b-xl">
               <Button variant="outline" onClick={() => setDetailGoal(null)}>
                 Close
               </Button>

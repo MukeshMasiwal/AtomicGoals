@@ -81,6 +81,7 @@ export async function POST(req: Request) {
       description,
       assignedTo,
       team,
+      department,
       priority,
       dueDate,
       progress,
@@ -89,6 +90,15 @@ export async function POST(req: Request) {
       numberOfTasks,
       goalWeightage,
       kpiType,
+      uom,
+      thrustArea,
+      plannedTargetValue,
+      isShared,
+      sharedGoalGroupId,
+      primaryOwnerId,
+      contributingTeams,
+      contributionPermissions,
+      contributionPercentage,
     } = await req.json();
 
     if (!dueDate) {
@@ -98,9 +108,13 @@ export async function POST(req: Request) {
       );
     }
     const parsedDueDate = new Date(dueDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (parsedDueDate < today) {
+    
+    // Normalize both dates to UTC midnight to avoid local timezone offset bugs
+    const dueUTC = Date.UTC(parsedDueDate.getUTCFullYear(), parsedDueDate.getUTCMonth(), parsedDueDate.getUTCDate());
+    const now = new Date();
+    const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (dueUTC < todayUTC) {
       return NextResponse.json(
         { error: "Deadline cannot be set in the past." },
         { status: 400 },
@@ -174,7 +188,7 @@ export async function POST(req: Request) {
         ...participantGoals,
         {
           _id: "new-goal",
-          goalWeightage: parsedGoalWeightage ?? 10,
+          goalWeightage: parsedGoalWeightage,
           progress: progress ?? 0,
           status: "not-started",
           approvalStatus: "Pending Approval",
@@ -200,11 +214,16 @@ export async function POST(req: Request) {
       );
     }
 
-    if (targetTeam && assignedManager && String(targetTeam.manager) !== String(assignedManager)) {
-      return NextResponse.json(
-        { error: "Assigned manager must belong to the selected team." },
-        { status: 400 },
-      );
+    if (targetTeam && assignedManager) {
+      const isTeamManager = String(targetTeam.manager) === String(assignedManager);
+      const isTeamMember = targetTeam.members?.some((m: any) => String(m) === String(assignedManager));
+      
+      if (!isTeamManager && !isTeamMember) {
+        return NextResponse.json(
+          { error: "Assigned manager must belong to the selected team." },
+          { status: 400 },
+        );
+      }
     }
 
     if (session.role === "manager" && targetTeam && String(targetTeam.manager) !== session.id) {
@@ -215,16 +234,15 @@ export async function POST(req: Request) {
     }
 
     // Approval logic based on roles
-    let finalStatus =
-      approvalStatus || (session.role === "admin" ? "Approved" : "Pending Approval");
+    let finalStatus = approvalStatus || "Draft";
+    
+    if (session.role === "admin") {
+      finalStatus = approvalStatus || "Approved";
+    }
 
-    if (["Approved", "Rejected"].includes(finalStatus)) {
-      if (session.role === "employee") {
-        finalStatus = "Pending Approval"; // Employee goals need Manager/Admin approval
-      } else if (session.role === "manager") {
-        finalStatus = "Pending Approval"; // Manager goals need Admin approval
-      } else if (session.role === "admin") {
-        // Admin goals auto-approved or keep whatever they selected
+    if (["Approved", "Rejected", "Pending Approval"].includes(finalStatus) && !approvalStatus) {
+      if (session.role === "employee" || session.role === "manager") {
+        finalStatus = "Draft"; // Default new goals to Draft so they can compile a sheet
       }
     }
 
@@ -237,22 +255,44 @@ export async function POST(req: Request) {
       dueDate: parsedDueDate,
       progress: progress || 0,
       numberOfTasks: numberOfTasks || 1,
-      goalWeightage: parsedGoalWeightage ?? 10,
+      goalWeightage: parsedGoalWeightage,
       contributionPercentage:
         numberOfTasks && Number(numberOfTasks) > 0
           ? Math.round(((parsedGoalWeightage ?? 10) / Number(numberOfTasks)) * 10) / 10
           : parsedGoalWeightage ?? 10,
-      contributingTeams: team ? [team] : [],
-      contributionPermissions: ["team-members"],
+      contributingTeams: contributingTeams || [],
+      contributionPermissions: contributionPermissions || ["team-members"],
       approvalStatus: finalStatus,
+      department: department || creatorUser?.department || "",
       assignedManager,
       kpiType: kpiType || "min",
+      uom: uom || "Numeric",
+      thrustArea: thrustArea || "",
+      plannedTargetValue: plannedTargetValue !== undefined && plannedTargetValue !== "" ? Number(plannedTargetValue) : null,
+      isShared: isShared || false,
+      sharedGoalGroupId: sharedGoalGroupId || "",
+      primaryOwnerId: primaryOwnerId || null,
     };
     if (team) {
       payload.team = team;
     }
 
-    const goal = await Goal.create(payload);
+    let createdGoals: any[] = [];
+    const groupId = isShared ? new Date().getTime().toString() : "";
+
+    if (isShared && Array.isArray(assignedTo) && assignedTo.length > 0) {
+      const docsToCreate = assignedTo.map((assigneeId: string) => ({
+        ...payload,
+        assignedTo: [assigneeId],
+        sharedGoalGroupId: groupId,
+        primaryOwnerId: session.id,
+      }));
+      createdGoals = await Goal.insertMany(docsToCreate);
+    } else {
+      createdGoals = [await Goal.create(payload)];
+    }
+
+    const goal = createdGoals[0]; // Reference for notifications
 
     // Notification logic
     const creatorProfile = await User.findById(session.id);
@@ -261,8 +301,10 @@ export async function POST(req: Request) {
     const { createNotification, notifyAdmins } = await import("@/lib/notifications");
 
     const newNotifBase = {
-      title: "New Task Created",
-      message: `New task "${title}" [Priority: ${priority}] created by ${session.name} (${creatorDept}).`,
+      title: isShared ? "Shared Goal Assigned" : "New Task Created",
+      message: isShared 
+        ? `You have been assigned a shared goal "${title}" by ${session.name}.`
+        : `New task "${title}" [Priority: ${priority}] created by ${session.name} (${creatorDept}).`,
       type: "Goal Created" as any, // mapping to Goal Created
       link: "/dashboard/goals",
       relatedGoal: goal._id.toString(),
@@ -276,23 +318,13 @@ export async function POST(req: Request) {
       });
     }
 
-    // Notify all admins
-    await notifyAdmins(newNotifBase);
-
-    // Notify Assigned Users if they are not the creator
+    // Notify all assigned users
     if (assignedTo && assignedTo.length > 0) {
-      const assigneesToNotify = assignedTo.filter(
-        (id: string) => id !== session.id,
-      );
-      if (assigneesToNotify.length > 0) {
-        for (const assignee of assigneesToNotify) {
+      for (const uid of assignedTo) {
+        if (uid !== session.id && uid !== assignedManager) {
           await createNotification({
-            title: "New Task Assigned",
-            message: `You have been assigned to task "${title}" by ${session.name}.`,
-            type: "Goal Created" as any,
-            recipient: assignee,
-            link: "/dashboard/goals",
-            relatedGoal: goal._id.toString(),
+            ...newNotifBase,
+            recipient: uid,
           });
         }
       }

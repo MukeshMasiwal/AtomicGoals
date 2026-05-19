@@ -6,7 +6,6 @@ import {
   Bell,
   ChevronDown,
   Menu,
-  Search,
   CheckCircle,
   XCircle,
   UserPlus,
@@ -26,7 +25,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/ui/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -152,13 +150,13 @@ export default function TopNav({
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/80 bg-card/90 px-3 py-3 backdrop-blur-md sm:px-4 sm:py-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
+      <div className="flex flex-row items-center justify-between gap-2 sm:gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex items-center gap-2 lg:hidden">
             <Button
               variant="ghost"
               size="icon"
-              className="h-11 w-11 shrink-0 rounded-xl"
+              className="h-9 w-9 sm:h-11 sm:w-11 shrink-0 rounded-xl"
               onClick={onToggleSidebar}
               aria-label="Toggle sidebar"
             >
@@ -179,14 +177,7 @@ export default function TopNav({
           </div>
         </div>
 
-        <div className="flex flex-1 flex-wrap items-center justify-end gap-2 sm:gap-3">
-          <div className="relative hidden w-full max-w-xs md:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              className="rounded-xl border-border bg-muted/50 pl-9 focus:bg-card dark:focus:bg-slate-950"
-              placeholder="Search goals, teams..."
-            />
-          </div>
+        <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-3">
           <div className="hidden sm:block">{roleSwitcher}</div>
           <Badge variant="slate" className="hidden md:inline-flex">
             {roleLabel}
@@ -197,7 +188,7 @@ export default function TopNav({
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative h-11 w-11 rounded-xl transition hover:bg-muted dark:hover:bg-slate-800"
+                className="relative h-9 w-9 sm:h-11 sm:w-11 rounded-xl transition hover:bg-muted dark:hover:bg-slate-800"
                 aria-label="Notifications"
               >
                 <Bell className="h-5 w-5 text-foreground/80" />
@@ -343,8 +334,8 @@ export default function TopNav({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex h-11 items-center gap-2 rounded-full border border-border bg-card px-2.5 py-1.5 text-sm shadow-sm transition hover:border-slate-300">
-                <Avatar className="h-8 w-8">
+              <button className="flex h-9 sm:h-11 items-center gap-2 rounded-full border border-border bg-card p-1 sm:px-2.5 sm:py-1.5 text-sm shadow-sm transition hover:border-slate-300">
+                <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
                   {avatar ? (
                     <img
                       src={avatar}

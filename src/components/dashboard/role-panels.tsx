@@ -28,18 +28,18 @@ export default function RolePanels({ panels, role }: RolePanelsProps) {
             transition={{ delay: index * 0.06 }}
           >
             <Card className="h-full border border-border bg-card shadow-soft transition hover:shadow-md">
-              <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <Icon className="h-4 w-4" />
+              <CardHeader className="flex flex-row items-center gap-2.5 sm:gap-3 space-y-0 pb-2">
+                <div className="flex h-7 w-7 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </div>
-                <CardTitle className="text-base">{panel.title}</CardTitle>
+                <CardTitle className="text-sm sm:text-base">{panel.title}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2.5">
                   {panel.items.map((item) => (
                     <li
                       key={item}
-                      className="flex items-center gap-2 text-sm text-foreground/80 before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full before:bg-primary/60 before:content-['']"
+                      className="flex items-center gap-2 text-[13px] sm:text-sm text-foreground/80 before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full before:bg-primary/60 before:content-['']"
                     >
                       {item}
                     </li>

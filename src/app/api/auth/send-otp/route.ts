@@ -18,42 +18,33 @@ export async function POST(request: Request) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Find user or create one
+    // If no user exists, seamlessly create one for the onboarding flow
     let user = await User.findOne({ email });
     if (!user) {
-      // Create user if they don't exist (acting as a sign-up)
-      const name = email.split("@")[0]; // Simple default name
+      const name = email.split("@")[0];
       user = await User.create({
         name,
         email,
-        role: "employee", // Default role
+        role: "employee",
         department: "General",
         verified: false,
         onboardingCompleted: false,
         approvalStatus: "Pending Approval",
-        otp,
-        otpExpiry: otpExpire,
       });
-      console.log("[AUTH] Created placeholder user for OTP", {
-        email,
-        userId: String(user._id),
-      });
-      await logAudit({
-        action: "user.signup",
-        actorEmail: email,
-        targetType: "user",
-        targetId: String(user._id),
-      });
-    } else {
-      // Update existing user with new OTP
-      user.otp = otp;
-      user.otpExpiry = otpExpire;
-      await user.save();
-      console.log("[AUTH] Re-issued OTP for existing user", {
+      console.log("[AUTH] Created new user during OTP request", {
         email,
         userId: String(user._id),
       });
     }
+
+    // Update existing user with new OTP
+    user.otp = otp;
+    user.otpExpiry = otpExpire;
+    await user.save();
+    console.log("[AUTH] Re-issued OTP for existing user", {
+      email,
+      userId: String(user._id),
+    });
 
     // Log the OTP to console for easy testing locally (since SMTP might fail)
     console.log(`[AUTH] Generated OTP for ${email}: ${otp}`);

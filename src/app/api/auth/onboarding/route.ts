@@ -23,6 +23,7 @@ export async function POST(request: Request) {
       lastName,
       department,
       onboardingCompleted: true,
+      verified: true,
       approvalStatus: "Pending Approval",
     };
 
@@ -69,6 +70,8 @@ export async function POST(request: Request) {
       department,
       onboardingCompleted: true,
       approvalStatus: "Pending Approval" as const,
+      verified: true,
+      isSeedUser: !!(session as any).isSeedUser,
     };
 
     const token = await createSessionToken(newSessionUser);

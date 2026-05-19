@@ -1,6 +1,6 @@
 # AtomicGoals
 
-Next.js + MongoDB starter with a seed script.
+Next.js + MongoDB starter with OTP-based authentication and a seed script.
 
 ## Setup
 
@@ -20,7 +20,6 @@ Seed details:
 - Database: atomic_goals
 - Collection: employee
 - Email: adminmail@gmail.com
-- Password: password (stored as a bcrypt hash)
 - Role: admin
 
 ## Login page
@@ -28,4 +27,4 @@ Seed details:
 Visit:
 	https://atomic-goals-kappa.vercel.app/
 
-The login form posts to /api/login and validates email + password against MongoDB.
+The login form uses email OTP and seed login flows.

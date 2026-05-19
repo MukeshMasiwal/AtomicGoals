@@ -33,6 +33,8 @@ export async function POST(request: Request) {
       otpExpiry?: Date;
       approvalStatus?: "Pending Approval" | "Approved" | "Rejected";
       onboardingCompleted?: boolean;
+      verified?: boolean;
+      isSeedUser?: boolean;
     }>();
 
     if (!user) {
@@ -54,10 +56,10 @@ export async function POST(request: Request) {
       approvalStatus: user.approvalStatus ?? "Pending Approval",
     });
 
-    // Clear OTP after successful verification
+    // Clear OTP after successful verification and mark user as verified
     await User.updateOne(
       { _id: user._id },
-      { $unset: { otp: 1, otpExpiry: 1 } },
+      { $unset: { otp: 1, otpExpiry: 1 }, $set: { verified: true } },
     );
 
     const sessionUser = {
@@ -68,6 +70,8 @@ export async function POST(request: Request) {
       department: user.department ?? "",
       approvalStatus: user.approvalStatus ?? "Pending Approval",
       onboardingCompleted: user.onboardingCompleted ?? false,
+      verified: true,
+      isSeedUser: user.isSeedUser ?? false,
     };
 
     const token = await createSessionToken(sessionUser);
@@ -76,6 +80,8 @@ export async function POST(request: Request) {
     const redirectTo = resolveAuthRedirectPath({
       approvalStatus: sessionUser.approvalStatus,
       onboardingCompleted: sessionUser.onboardingCompleted,
+      verified: sessionUser.verified,
+      isSeedUser: sessionUser.isSeedUser,
     });
 
     console.log("[AUTH] Session created", {
@@ -101,6 +107,8 @@ export async function POST(request: Request) {
         department: sessionUser.department,
         approvalStatus: sessionUser.approvalStatus,
         onboardingCompleted: sessionUser.onboardingCompleted,
+        verified: sessionUser.verified,
+        isSeedUser: sessionUser.isSeedUser,
       }),
       redirectTo,
     });

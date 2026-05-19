@@ -14,18 +14,17 @@ export async function GET() {
     let query: any = {};
 
     if (session.role === "manager") {
-      const managedTeam = await Team.findOne({ manager: session.id })
-        .select("_id")
-        .lean<{ _id: { toString(): string } }>();
-
-      if (managedTeam?._id) {
-        query = { _id: managedTeam._id };
-      } else {
-        const user = await User.findById(session.id)
-          .select("team")
-          .lean<{ team?: { toString(): string } }>();
-        query = user?.team ? { _id: user.team } : { _id: null };
-      }
+      const user = await User.findById(session.id).select("team department").lean<{ team?: { toString(): string }, department?: string }>();
+      const userDept = user?.department || "";
+      const managedTeams = await Team.find({ manager: session.id }).select("_id").lean();
+      const managedTeamIds = managedTeams.map((t: any) => t._id);
+      
+      const orConditions: any[] = [];
+      if (userDept) orConditions.push({ department: userDept });
+      if (user?.team) orConditions.push({ _id: user.team });
+      if (managedTeamIds.length > 0) orConditions.push({ _id: { $in: managedTeamIds } });
+      
+      query = orConditions.length > 0 ? { $or: orConditions } : { _id: null };
     }
 
     if (session.role === "employee") {

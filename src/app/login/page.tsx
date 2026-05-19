@@ -24,6 +24,13 @@ export default function LoginPage() {
   const [timeLeft, setTimeLeft] = useState(0);
 
   useEffect(() => {
+    const emailFromQuery = new URLSearchParams(window.location.search).get("email");
+    if (emailFromQuery) {
+      setEmail(emailFromQuery);
+    }
+  }, []);
+
+  useEffect(() => {
     if (timeLeft > 0 && step === "otp") {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
@@ -58,6 +65,7 @@ export default function LoginPage() {
       const data = (await response.json().catch(() => ({}))) as {
         error?: string;
         redirectTo?: string;
+        requiresSignup?: boolean;
       };
 
       if (!response.ok) {

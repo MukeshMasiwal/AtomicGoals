@@ -10,6 +10,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Goal } from "@/models/Goal";
 import { Team } from "@/models/Team";
 import { User } from "@/models/User";
+import { GoalAuditLog } from "@/models/GoalAuditLog";
 
 export async function PUT(
   req: Request,
@@ -58,6 +59,21 @@ export async function PUT(
         { error: "Managers can only manage goals for their team or department." },
         { status: 403 },
       );
+    }
+
+    if (goal.approvalStatus === "Approved" || goal.isLocked) {
+      if (!isAdmin) {
+        // Only allow updating progress or status for locked/approved goals
+        const restrictedFields = ["title", "description", "dueDate", "goalWeightage", "numberOfTasks", "kpiType", "uom", "thrustArea", "plannedTargetValue"];
+        const restrictedAttempt = restrictedFields.some(field => updates[field] !== undefined && updates[field] !== goal[field]);
+        
+        if (restrictedAttempt) {
+          return NextResponse.json(
+            { error: "This goal is locked because it is Approved. You can only update its progress or status." },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     const nextWeightage =
@@ -120,7 +136,8 @@ export async function PUT(
       );
     }
 
-    if (updates.goalWeightage !== undefined) {
+    // Recalculate per-task contribution when either the goal weightage or number of tasks changes
+    if (updates.goalWeightage !== undefined || updates.numberOfTasks !== undefined) {
       updates.goalWeightage = nextWeightage;
       updates.contributionPercentage = Math.round(
         (nextWeightage / Math.max(Number(updates.numberOfTasks || goal.numberOfTasks || 1), 1)) * 10,
@@ -139,11 +156,16 @@ export async function PUT(
       }
     }
 
-    // Employees cannot change approval status
+    // Employees cannot change approval status directly
     if (session.role === "employee") {
       delete updates.approvalStatus;
       delete updates.approvedBy;
       delete updates.approvalComments;
+
+      // Automatically move rejected goals back to Draft when edited by employee
+      if (goal.approvalStatus === "Rejected") {
+        updates.approvalStatus = "Draft";
+      }
     }
 
     const goalDocument = await Goal.findById(params.id);
@@ -153,12 +175,52 @@ export async function PUT(
 
     Object.assign(goalDocument, updates);
     
+    // Calculate audit log changes before updating if the goal was locked/approved
+    const changes: any[] = [];
+    if (goal.approvalStatus === "Approved" || goal.isLocked) {
+      const keysToTrack = ["title", "description", "dueDate", "goalWeightage", "numberOfTasks", "kpiType", "uom", "thrustArea", "plannedTargetValue", "progress", "status"];
+      for (const key of keysToTrack) {
+        if (updates[key] !== undefined && String(updates[key]) !== String(goal[key])) {
+          changes.push({
+            field: key,
+            oldValue: goal[key],
+            newValue: updates[key],
+          });
+        }
+      }
+    }
+
     // Instead of using goal.save() which runs all schema validators (failing heavily on old seeded data missing `assignedManager` etc.),
     // We update it strictly on what's modified.
     await Goal.updateOne({ _id: goalDocument._id }, { $set: updates }, { runValidators: true, context: 'query' }).catch(async () => {
       // Fallback without validators if it still fails due to missing legacy fields
       await Goal.updateOne({ _id: goalDocument._id }, { $set: updates });
     });
+
+    if (changes.length > 0) {
+      for (const change of changes) {
+        let action = "Goal Updated";
+        if (change.field === "progress" || change.field === "tasksCompleted") action = "Task Progress Updated";
+        if (change.field === "status" && change.newValue === "completed") action = "Task Completed";
+        else if (change.field === "status") action = "Task Status Changed";
+        if (change.field === "assignedTo" || change.field === "assignedManager") action = "Task Reassigned";
+        if (change.field === "title") action = "Task Renamed";
+        if (change.field === "dueDate") action = "Deadline Modified";
+        if (change.field === "goalWeightage" || change.field === "contributionPercentage") action = "Goal Weightage Changed";
+        if (["kpiType", "uom", "thrustArea", "plannedTargetValue"].includes(change.field)) action = "KPI Progress Updated";
+
+        await GoalAuditLog.create({
+          goalId: goalDocument._id,
+          goalTitle: goal.title || "Untitled Goal",
+          taskName: goal.title || "Untitled Task",
+          userId: session.id,
+          userName: session.name || "Unknown User",
+          userRole: session.role || "Unknown Role",
+          action,
+          changes: [change],
+        });
+      }
+    }
 
     const notifyRecipients = new Set<string>();
     if (goal.creator?.toString() && goal.creator.toString() !== session.id) {

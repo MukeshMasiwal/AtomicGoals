@@ -33,6 +33,7 @@ export async function POST(req: Request) {
       jobTitle,
       department: department || "",
       onboardingCompleted: true,
+      verified: true,
       approvalStatus: "Pending Approval",
     };
 
@@ -64,6 +65,8 @@ export async function POST(req: Request) {
       department: updatedUser.department,
       approvalStatus: "Pending Approval" as const,
       onboardingCompleted: true,
+      verified: true,
+      isSeedUser: !!updatedUser.isSeedUser,
     });
 
     await setSessionCookie(newToken);

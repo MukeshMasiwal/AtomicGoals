@@ -39,7 +39,8 @@ export async function PUT(
       if (updates.tasksCompleted < 0) {
         return NextResponse.json({ error: "Completed tasks cannot be negative." }, { status: 400 });
       }
-      if (updates.tasksCompleted > goal.numberOfTasks) {
+      const safeTotalTasksForValidation = Math.max(1, Number(goal.numberOfTasks) || 1);
+      if (updates.tasksCompleted > safeTotalTasksForValidation) {
         return NextResponse.json({ error: "Completed tasks cannot exceed total tasks." }, { status: 400 });
       }
     }
@@ -66,7 +67,8 @@ export async function PUT(
       changes.push({ field: "tasksCompleted", oldValue: goal.tasksCompleted, newValue: updates.tasksCompleted });
       goal.tasksCompleted = updates.tasksCompleted;
       
-      const newProgress = Math.round((goal.tasksCompleted / Math.max(1, goal.numberOfTasks)) * 100);
+      const safeTotalTasks = Math.max(1, Number(goal.numberOfTasks) || 1);
+      const newProgress = Math.round((goal.tasksCompleted / safeTotalTasks) * 100);
       if (newProgress !== goal.progress) {
         changes.push({ field: "progress", oldValue: goal.progress, newValue: newProgress });
         goal.progress = newProgress;
@@ -101,12 +103,24 @@ export async function PUT(
 
     // Log Audit Trail
     if (changes.length > 0) {
-      await GoalAuditLog.create({
-        goalId: goal._id,
-        userId: session.id,
-        action: "QUARTERLY_UPDATE",
-        changes: changes,
-      });
+      for (const change of changes) {
+        let action = "Quarterly Update";
+        if (change.field === "plannedTargetValue" || change.field === "actualAchievementValue") action = "KPI Progress Updated";
+        if (change.field === "quarterlyStatus" && change.newValue === "completed") action = "Task Completed";
+        else if (change.field === "quarterlyStatus") action = "Task Status Changed";
+        if (change.field === "tasksCompleted" || change.field === "progress") action = "Task Progress Updated";
+
+        await GoalAuditLog.create({
+          goalId: goal._id,
+          goalTitle: goal.title || "Untitled Goal",
+          taskName: goal.title || "Untitled Task",
+          userId: session.id,
+          userName: session.name || "Unknown User",
+          userRole: session.role || "Unknown Role",
+          action,
+          changes: [change],
+        });
+      }
     }
 
     // Fetch the updated goal with populated fields for response

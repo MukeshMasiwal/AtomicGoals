@@ -1,4 +1,3 @@
-import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
@@ -27,6 +26,8 @@ export type SessionPayload = {
   department: string;
   approvalStatus: "Pending Approval" | "Approved" | "Rejected";
   onboardingCompleted?: boolean;
+  verified?: boolean;
+  isSeedUser?: boolean;
 };
 
 export type AuthRedirectPath =
@@ -43,17 +44,6 @@ function getJwtSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
-}
-
-export async function verifyPassword(
-  password: string,
-  hash: string,
-): Promise<boolean> {
-  return bcrypt.compare(password, hash);
-}
-
 export async function createSessionToken(user: SessionUser): Promise<string> {
   return new SignJWT({
     email: user.email,
@@ -62,6 +52,8 @@ export async function createSessionToken(user: SessionUser): Promise<string> {
     department: user.department,
     approvalStatus: user.approvalStatus,
     onboardingCompleted: user.onboardingCompleted,
+    verified: user.verified,
+    isSeedUser: user.isSeedUser,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
@@ -82,6 +74,8 @@ export async function verifySessionToken(
     const department = payload.department;
     const approvalStatus = payload.approvalStatus;
     const onboardingCompleted = payload.onboardingCompleted;
+    const verified = payload.verified;
+    const isSeedUser = payload.isSeedUser;
 
     if (
       typeof sub !== "string" ||
@@ -100,6 +94,8 @@ export async function verifySessionToken(
       department: typeof department === "string" ? department : "",
       approvalStatus: (approvalStatus as "Pending Approval" | "Approved" | "Rejected") || "Pending Approval",
       onboardingCompleted: typeof onboardingCompleted === "boolean" ? onboardingCompleted : false,
+      verified: typeof verified === "boolean" ? verified : false,
+      isSeedUser: typeof isSeedUser === "boolean" ? isSeedUser : false,
     };
   } catch {
     return null;
@@ -115,24 +111,38 @@ export function sessionPayloadToUser(payload: SessionPayload): SessionUser {
     department: payload.department,
     approvalStatus: payload.approvalStatus || "Pending Approval",
     onboardingCompleted: payload.onboardingCompleted || false,
+    verified: payload.verified || false,
+    isSeedUser: payload.isSeedUser || false,
   };
 }
 
 export function resolveAuthRedirectPath(
-  session: Pick<SessionPayload, "approvalStatus" | "onboardingCompleted">,
+  session: Pick<SessionPayload, "approvalStatus" | "onboardingCompleted" | "verified" | "isSeedUser">,
 ): AuthRedirectPath {
-  if (!session.onboardingCompleted) {
-    return "/onboarding";
+  // Backwards-compatible default behavior (legacy callers)
+  const approval = session.approvalStatus;
+  const onboardingCompleted = session.onboardingCompleted;
+
+  // If we don't have verified/isSeedUser flags, preserve previous routing
+  if (typeof (session as any).verified === "undefined" && typeof (session as any).isSeedUser === "undefined") {
+    if (!onboardingCompleted) return "/onboarding";
+    if (approval === "Approved") return "/dashboard";
+    if (approval === "Rejected") return "/rejected";
+    return "/waiting-approval";
   }
 
-  if (session.approvalStatus === "Approved") {
-    return "/dashboard";
-  }
+  const verified = (session as any).verified as boolean;
+  const isSeedUser = (session as any).isSeedUser as boolean;
 
-  if (session.approvalStatus === "Rejected") {
-    return "/rejected";
-  }
+  // Seed/demo users always go straight to dashboard
+  if (isSeedUser) return "/dashboard";
 
+  // New placeholder users or those who haven't finished setup should complete onboarding first
+  if (!verified || !onboardingCompleted) return "/onboarding";
+
+  // Existing, verified users
+  if (approval === "Approved") return "/dashboard";
+  if (approval === "Rejected") return "/rejected";
   return "/waiting-approval";
 }
 

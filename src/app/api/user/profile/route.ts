@@ -50,6 +50,8 @@ export async function PUT(req: Request) {
       department: updatedUser.department,
       approvalStatus: updatedUser.approvalStatus ?? "Pending Approval",
       onboardingCompleted: updatedUser.onboardingCompleted ?? false,
+      verified: updatedUser.verified ?? false,
+      isSeedUser: !!updatedUser.isSeedUser,
     });
 
     await setSessionCookie(newToken);

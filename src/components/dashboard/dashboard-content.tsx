@@ -16,9 +16,7 @@ const AnalyticsSection = dynamic(
 import GoalsOverview from "@/components/dashboard/goals-overview";
 import HeroSection from "@/components/dashboard/hero-section";
 import PendingActions from "@/components/dashboard/pending-actions";
-import QuickActions from "@/components/dashboard/quick-actions";
 import RecentActivity from "@/components/dashboard/recent-activity";
-import RolePanels from "@/components/dashboard/role-panels";
 import SectionHeader from "@/components/dashboard/section-header";
 import type { DashboardData } from "@/lib/mock-data";
 
@@ -32,7 +30,7 @@ export default function DashboardContent({ data }: DashboardContentProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35 }}
-      className="space-y-8"
+      className="space-y-6 sm:space-y-8"
     >
       <HeroSection
         progress={data.progress}
@@ -41,7 +39,7 @@ export default function DashboardContent({ data }: DashboardContentProps) {
         subtitle={data.hero.subtitle}
       />
 
-      <section className="space-y-4">
+      <section className="space-y-3 sm:space-y-4">
         <SectionHeader
           eyebrow="Goals"
           title="Goals Overview"
@@ -50,7 +48,7 @@ export default function DashboardContent({ data }: DashboardContentProps) {
         <GoalsOverview goals={data.goals} />
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-3 sm:space-y-4">
         <SectionHeader
           eyebrow="Analytics"
           title="Quarterly Progress Analytics"
@@ -63,7 +61,7 @@ export default function DashboardContent({ data }: DashboardContentProps) {
         />
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-3 sm:space-y-4">
         <SectionHeader
           eyebrow="Pending Actions"
           title="What needs your attention"
@@ -72,33 +70,16 @@ export default function DashboardContent({ data }: DashboardContentProps) {
         <PendingActions items={data.pendingActions} />
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-        <div className="space-y-4">
-          <SectionHeader
-            eyebrow="Activity"
-            title="Recent Activity Feed"
-            subtitle="Stay informed with the latest goal changes and updates."
-          />
-          <RecentActivity items={data.activityFeed} />
-        </div>
-        <div className="space-y-4">
-          <SectionHeader
-            eyebrow="Quick Actions"
-            title="Jump back in"
-            subtitle="Speed through common actions without leaving the dashboard."
-          />
-          <QuickActions actions={data.quickActions} />
-        </div>
+      <section className="space-y-3 sm:space-y-4">
+        <SectionHeader
+          eyebrow="Activity"
+          title="Recent Activity Feed"
+          subtitle="Stay informed with the latest goal changes and updates."
+        />
+        <RecentActivity items={data.activityFeed} />
       </section>
 
-      <section className="space-y-4">
-        <SectionHeader
-          eyebrow="Role View"
-          title="Role-based insights"
-          subtitle={`Tailored for ${data.user.roleLabel.toLowerCase()} responsibilities.`}
-        />
-        <RolePanels panels={data.rolePanels} role={data.user.role} />
-      </section>
+      {/* Role view removed per request */}
     </motion.div>
   );
 }

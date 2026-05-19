@@ -25,6 +25,8 @@ export async function GET() {
       department?: string;
       approvalStatus?: "Pending Approval" | "Approved" | "Rejected";
       onboardingCompleted?: boolean;
+      verified?: boolean;
+      isSeedUser?: boolean;
     }>();
 
     if (!user) {
@@ -41,6 +43,8 @@ export async function GET() {
       department: user.department ?? "",
       approvalStatus: user.approvalStatus ?? "Pending Approval",
       onboardingCompleted: user.onboardingCompleted ?? false,
+      verified: user.verified ?? false,
+      isSeedUser: !!user.isSeedUser,
     });
 
     await setSessionCookie(newToken);
@@ -60,6 +64,8 @@ export async function GET() {
         department: user.department ?? "",
         approvalStatus: user.approvalStatus ?? "Pending Approval",
         onboardingCompleted: user.onboardingCompleted ?? false,
+        verified: user.verified ?? false,
+        isSeedUser: !!user.isSeedUser,
       },
     });
   } catch (error) {

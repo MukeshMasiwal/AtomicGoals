@@ -232,13 +232,24 @@ export default function OnboardingPage() {
                   </Button>
                 </form>
 
-                <div className="mt-6 flex items-center justify-between gap-4 border-t border-slate-200/70 pt-4 text-sm dark:border-slate-800/70">
-                  <Link
-                    href="/"
-                    className="text-slate-500 transition-colors hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                  >
-                    Go to Homepage
-                  </Link>
+                <div className="mt-6 flex flex-col items-center justify-center gap-3 border-t border-slate-200/70 pt-6 text-sm dark:border-slate-800/70 sm:flex-row sm:justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 dark:text-slate-400">Already have an account?</span>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await fetch("/api/auth/logout", { method: "POST" });
+                        } catch (e) {
+                          console.error("Logout failed:", e);
+                        }
+                        window.location.href = "/login";
+                      }}
+                      className="font-medium text-indigo-600 transition-colors hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                    >
+                      Log in
+                    </button>
+                  </div>
                   <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                     Onboarding flow unchanged
                   </span>

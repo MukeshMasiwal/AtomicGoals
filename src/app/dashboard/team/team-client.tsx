@@ -17,8 +17,6 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Search,
-  Filter,
-  Mail,
   MoreHorizontal,
   Plus,
   Loader2,
@@ -356,12 +354,6 @@ export default function TeamClient({ user }: { user: any }) {
             )}
           </div>
           <div className="flex w-full gap-3 sm:w-auto">
-            <Button
-              variant="outline"
-              className="flex h-11 items-center gap-2 bg-card "
-            >
-              <Filter className="h-4 w-4" /> Filter
-            </Button>
             {user.role !== "employee" && (
               <Button
                 onClick={() => setIsModalOpen(true)}
@@ -388,7 +380,7 @@ export default function TeamClient({ user }: { user: any }) {
         </Card>
 
         <Card className="border-border/60 shadow-sm bg-card/80 backdrop-blur-xl overflow-hidden">
-          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <div className="hidden md:block -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
             <Table>
               <TableHeader className="bg-muted/20 dark:bg-slate-800/50">
                 <TableRow className="border-border hover:bg-transparent">
@@ -485,13 +477,6 @@ export default function TeamClient({ user }: { user: any }) {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-indigo-600"
-                          >
-                            <Mail className="h-4 w-4" />
-                          </Button>
                           {(user.role === "admin" ||
                             user.role === "manager") && (
                             <DropdownMenu>
@@ -532,20 +517,96 @@ export default function TeamClient({ user }: { user: any }) {
               </TableBody>
             </Table>
           </div>
+          
+          {/* Mobile View */}
+          <div className="md:hidden flex flex-col gap-4 p-4">
+            {loading ? (
+              <div className="py-8 text-center text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-indigo-500" />
+                Loading directory...
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground">
+                No members found.
+              </div>
+            ) : (
+              filteredUsers.map((member) => (
+                <div key={member.id} className="flex flex-col gap-3 p-4 rounded-xl border border-border bg-card shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9 border border-border">
+                        <AvatarFallback className="bg-indigo-50 text-indigo-700 text-xs font-semibold">
+                          {member.name.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-foreground">{member.name}</span>
+                        <span className="text-[11px] text-muted-foreground">{member.email}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      {(user.role === "admin" || user.role === "manager") && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground shrink-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {member.approvalStatus === "Pending Approval" && (
+                              <DropdownMenuItem className="text-emerald-600 cursor-pointer" onClick={() => setApprovalUser(member)}>
+                                Review & Approve
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem className="text-red-600 cursor-pointer" onClick={() => handleRemoveFromTeam(member.id)}>
+                              Remove from Team
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase text-muted-foreground font-semibold">Role</span>
+                      <span className="text-xs text-foreground capitalize">{member.role}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase text-muted-foreground font-semibold">Department</span>
+                      <span className="text-xs text-foreground">{member.department || "—"}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase text-muted-foreground font-semibold">Team</span>
+                      <span className="text-xs text-foreground">{teams.find((t) => t._id === member.team)?.name || "—"}</span>
+                    </div>
+                    <div className="flex flex-col items-start pt-1">
+                      <Badge
+                        className={member.approvalStatus === "Pending Approval" ? "bg-amber-100 text-amber-700 border-amber-200 text-[10px]" : member.status === "Active" ? "bg-emerald-100 text-emerald-700 text-[10px]" : "bg-slate-100 text-slate-700 text-[10px]"}
+                        variant={null}
+                      >
+                        {member.approvalStatus === "Pending Approval" ? "Pending Approval" : member.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </Card>
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="max-h-[calc(100vh-2rem)] w-[min(100vw-2rem,28rem)] overflow-y-auto rounded-xl border border-border bg-card p-5 shadow-xl animate-in zoom-in-95 duration-200 sm:p-6">
-            <div className="mb-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm p-0 sm:p-4">
+          <div className="flex flex-col max-h-[85vh] sm:max-h-[calc(100vh-2rem)] w-full sm:w-[min(100vw-2rem,28rem)] rounded-t-2xl sm:rounded-xl border border-border bg-card shadow-xl animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+            <div className="p-4 sm:p-6 pb-3 border-b border-border/50 shrink-0">
               <h3 className="text-lg font-semibold tracking-tight text-foreground ">
                 {isManagerAddMembers
                   ? `Add Members to ${managedTeam?.name || "Team"}`
                   : "Create New Team"}
               </h3>
             </div>
-            <div className="space-y-4">
+            <div className="overflow-y-auto p-4 sm:p-6 space-y-4">
               {!isManagerAddMembers && (
                 <div className="space-y-2">
                   <Label>Team Name</Label>
@@ -570,9 +631,7 @@ export default function TeamClient({ user }: { user: any }) {
                       Select manager
                     </option>
                     {users
-                      .filter(
-                        (u) => u.role === "manager" || u.role === "admin",
-                      )
+                      .filter((u) => u.role === "manager" || u.role === "admin")
                       .map((u) => (
                         <option
                           key={u.id}
@@ -585,14 +644,12 @@ export default function TeamClient({ user }: { user: any }) {
                   </select>
                 </div>
               )}
+              
               <div className="space-y-2">
                 <Label>Select Members</Label>
                 <div className="max-h-48 overflow-y-auto border border-border rounded-md p-2 bg-muted/50 ">
                   {users
-                    .filter(
-                      (u) =>
-                        u.role !== "admin" && u.id !== selectedManagerId,
-                    )
+                    .filter((u) => u.role !== "admin" && u.id !== selectedManagerId)
                     .map((u) => (
                       <label
                         key={u.id}
@@ -601,16 +658,19 @@ export default function TeamClient({ user }: { user: any }) {
                         <input
                           type="checkbox"
                           checked={selectedMembers.includes(u.id)}
-                          disabled={
-                            limitReached && !selectedMembers.includes(u.id)
-                          }
+                          disabled={limitReached && !selectedMembers.includes(u.id)}
                           onChange={(e) => {
-                            if (e.target.checked)
-                              setSelectedMembers([...selectedMembers, u.id]);
-                            else
-                              setSelectedMembers(
-                                selectedMembers.filter((id) => id !== u.id),
+                            if (e.target.checked) {
+                              setSelectedMembers((prevMembers) =>
+                                prevMembers.includes(u.id)
+                                  ? prevMembers
+                                  : [...prevMembers, u.id],
                               );
+                            } else {
+                              setSelectedMembers((prevMembers) =>
+                                prevMembers.filter((id) => id !== u.id),
+                              );
+                            }
                           }}
                         />
                         <span className="text-sm">
@@ -619,16 +679,14 @@ export default function TeamClient({ user }: { user: any }) {
                       </label>
                     ))}
                 </div>
-                <p
-                  className={`text-xs ${limitReached ? "text-amber-600 dark:text-amber-500" : "text-muted-foreground"}`}
-                >
+                <p className={`text-xs ${limitReached ? "text-amber-600 dark:text-amber-500" : "text-muted-foreground"}`}>
                   {limitReached
                     ? `Team limit reached (${selectedCount}/${maxTeamMembers} members)`
                     : `Selected ${selectedCount}/${maxTeamMembers} members`}
                 </p>
               </div>
             </div>
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100 ">
+            <div className="flex justify-end gap-3 p-4 sm:p-5 border-t border-border bg-muted/20 shrink-0 sm:rounded-b-xl">
               <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
@@ -639,8 +697,7 @@ export default function TeamClient({ user }: { user: any }) {
                   limitReached ||
                   (isManagerAddMembers
                     ? normalizedSelectedMembers.length === 0
-                    : !newTeamName ||
-                      (user.role === "admin" && !selectedManagerId))
+                    : !newTeamName || (user.role === "admin" && !selectedManagerId))
                 }
                 className="bg-indigo-600 hover:bg-indigo-700 text-white"
               >
@@ -657,9 +714,10 @@ export default function TeamClient({ user }: { user: any }) {
 
       {/* Approval Modal */}
       {approvalUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="max-h-[calc(100vh-2rem)] w-[min(100vw-2rem,28rem)] overflow-y-auto rounded-xl border border-border bg-card p-5 shadow-xl animate-in zoom-in-95 duration-200 sm:p-6">
-            <div className="mb-4 text-center">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm p-0 sm:p-4">
+          <div className="flex flex-col max-h-[85vh] sm:max-h-[calc(100vh-2rem)] w-full sm:w-[min(100vw-2rem,28rem)] rounded-t-2xl sm:rounded-xl border border-border bg-card shadow-xl animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+            <div className="p-4 sm:p-6 overflow-y-auto">
+              <div className="mb-4 text-center">
               <div className="mx-auto w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-4">
                 <Avatar className="h-10 w-10">
                   <AvatarFallback className="bg-indigo-200 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300">
@@ -763,7 +821,8 @@ export default function TeamClient({ user }: { user: any }) {
               </div>
             )}
 
-            <div className="flex justify-center gap-3">
+            </div>
+            <div className="flex justify-center gap-3 p-4 sm:p-5 border-t border-border bg-muted/20 shrink-0 sm:rounded-b-xl">
               <Button
                 variant="outline"
                 className="w-40 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/30 dark:hover:bg-red-900/20"
@@ -790,9 +849,9 @@ export default function TeamClient({ user }: { user: any }) {
                 setApprovalUser(null);
                 router.replace("/dashboard/team");
               }}
-              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground z-10 bg-card/50 rounded-full p-1"
             >
-              ✕
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x h-4 w-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
           </div>
         </div>

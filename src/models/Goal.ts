@@ -60,6 +60,16 @@ const goalSchema = new Schema(
       enum: ["min", "max", "timeline", "zero"],
       default: "min",
     },
+    uom: {
+      type: String,
+      enum: ["Numeric", "Percentage", "Timeline", "Zero-Based"],
+      default: "Numeric",
+    },
+    thrustArea: { type: String, default: "" },
+    isLocked: { type: Boolean, default: false },
+    isShared: { type: Boolean, default: false },
+    sharedGoalGroupId: { type: String, default: "" },
+    primaryOwnerId: { type: Schema.Types.ObjectId, ref: "User", default: null },
     plannedTargetValue: { type: Number, default: null },
     actualAchievementValue: { type: Number, default: null },
     quarterlyStatus: {

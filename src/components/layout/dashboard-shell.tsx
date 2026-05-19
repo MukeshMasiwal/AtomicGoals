@@ -65,7 +65,7 @@ export default function DashboardShell({
           roleLabel={roleLabel}
           onToggleSidebar={() => setMobileOpen(true)}
         />
-        <main className="flex-1 min-w-0 space-y-6 bg-muted/30 px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
+        <main className="flex-1 min-w-0 space-y-4 sm:space-y-6 bg-muted/30 px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
           {children}
         </main>
       </div>
