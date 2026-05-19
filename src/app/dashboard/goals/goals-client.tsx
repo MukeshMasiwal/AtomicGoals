@@ -55,6 +55,11 @@ export default function GoalsClient({ user }: { user: any }) {
   const [approvalComment, setApprovalComment] = useState("");
   const [approving, setApproving] = useState(false);
 
+  const [contributionModalGoal, setContributionModalGoal] = useState<any>(null);
+  const [contributionTasks, setContributionTasks] = useState<any[]>([]);
+  const [contributionNote, setContributionNote] = useState("");
+  const [submittingContribution, setSubmittingContribution] = useState(false);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -546,6 +551,59 @@ export default function GoalsClient({ user }: { user: any }) {
     } catch (err) {
       console.error("Failed to update task status", err);
     }
+  };
+
+  const openContributionModal = (goal: any) => {
+    setContributionModalGoal(goal);
+    setContributionTasks([...(goal.tasks || [])]);
+    setContributionNote("");
+  };
+
+  const handleContributionSubmit = async () => {
+    if (!contributionModalGoal) return;
+    setSubmittingContribution(true);
+
+    const completedTasks = contributionTasks.filter((t: any) => t.status === "Completed").length;
+    const totalTasks = Math.max(contributionTasks.length, 1);
+    const progress = Math.round((completedTasks / totalTasks) * 100);
+
+    try {
+      const res = await fetch(`/api/goals/${contributionModalGoal._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          tasks: contributionTasks,
+          comment: contributionNote 
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setGoals(goals.map((g) => (g._id === contributionModalGoal._id ? { ...g, ...data.goal } : g)));
+        setDetailGoal((prev: any) => prev?._id === contributionModalGoal._id ? { ...prev, ...data.goal } : prev);
+        setContributionModalGoal(null);
+      } else {
+        console.error("Failed to update contribution", await res.text());
+      }
+    } catch (err) {
+      console.error("Failed to update contribution", err);
+    } finally {
+      setSubmittingContribution(false);
+    }
+  };
+
+  const toggleContributionTask = (idx: number) => {
+    const newTasks = [...contributionTasks];
+    const currentStatus = newTasks[idx].status || "Pending";
+    
+    if (currentStatus === "Pending") {
+      newTasks[idx].status = "In Progress";
+    } else if (currentStatus === "In Progress") {
+      newTasks[idx].status = "Completed";
+    } else {
+      newTasks[idx].status = "Pending";
+    }
+    
+    setContributionTasks(newTasks);
   };
 
   const managers = managersList;
@@ -1116,7 +1174,6 @@ export default function GoalsClient({ user }: { user: any }) {
                   onChange={(e) =>
                     setFormData({ ...formData, status: e.target.value })
                   }
-                  disabled={editingGoal?.approvalStatus === "Approved" && user.role !== "admin"}
                 >
                   <option value="not-started">Not Started</option>
                   <option value="on-track">On Track</option>
@@ -1135,7 +1192,7 @@ export default function GoalsClient({ user }: { user: any }) {
               <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              {!(editingGoal?.isLocked || (editingGoal?.approvalStatus === "Approved" && user.role !== "admin")) && (
+              {!(editingGoal?.isLocked && user.role !== "admin") && (
                 <Button
                   onClick={handleSave}
                   disabled={!formData.title || saving}
@@ -1248,7 +1305,19 @@ export default function GoalsClient({ user }: { user: any }) {
                   </div>
                 </div>
               <div className="space-y-2 col-span-2">
-                <h4 className="text-sm font-semibold text-foreground">Execution Tasks</h4>
+                <div className="flex justify-between items-center mb-1">
+                  <h4 className="text-sm font-semibold text-foreground">Execution Tasks</h4>
+                  {canMutateGoal(detailGoal) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:border-indigo-800 dark:text-indigo-300 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50"
+                      onClick={() => openContributionModal(detailGoal)}
+                    >
+                      Update Contribution
+                    </Button>
+                  )}
+                </div>
                 {detailGoal.tasks && detailGoal.tasks.length > 0 ? (
                   <div className="grid gap-2">
                     {detailGoal.tasks.map((task: any, idx: number) => (
@@ -1362,6 +1431,86 @@ export default function GoalsClient({ user }: { user: any }) {
           </div>
         </div>
       )}
+      {contributionModalGoal && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm p-0 sm:p-4">
+          <div className="flex flex-col max-h-[85vh] sm:max-h-[calc(100vh-2rem)] w-full sm:w-[min(100vw-2rem,32rem)] rounded-t-2xl sm:rounded-xl border border-border bg-card shadow-xl animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+            <div className="p-4 sm:p-6 pb-3 border-b border-border/50 shrink-0">
+              <h3 className="text-lg font-semibold tracking-tight text-foreground">
+                Update Contribution
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {contributionModalGoal.title}
+              </p>
+            </div>
+            <div className="overflow-y-auto p-4 sm:p-6 space-y-6">
+              
+              <div className="space-y-3">
+                <Label>Execution Tasks</Label>
+                {contributionTasks.length > 0 ? (
+                  <div className="space-y-2">
+                    {contributionTasks.map((task: any, idx: number) => (
+                      <div key={idx} className="flex items-center gap-3 p-2 rounded-md border border-border bg-muted/20">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => toggleContributionTask(idx)}
+                          className="h-6 w-6 shrink-0"
+                        >
+                          {task.status === "Completed" ? (
+                            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                          ) : task.status === "In Progress" ? (
+                            <PlayCircle className="h-5 w-5 text-blue-500" />
+                          ) : (
+                            <Clock className="h-4 w-4 text-slate-400" />
+                          )}
+                        </Button>
+                        <span className={`text-sm flex-1 ${task.status === "Completed" ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                          {task.title}
+                        </span>
+                        <Badge variant="slate" className="text-[10px] bg-transparent border-slate-300">
+                          {task.status || "Pending"}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">No specific tasks defined. Please update quarterly progress instead.</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Contribution Note (Optional)</Label>
+                <textarea
+                  className="w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]"
+                  placeholder="Describe your progress or any blockers..."
+                  value={contributionNote}
+                  onChange={(e) => setContributionNote(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 p-4 sm:p-5 border-t border-border bg-muted/20 shrink-0 sm:rounded-b-xl">
+              <Button
+                variant="outline"
+                onClick={() => setContributionModalGoal(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleContributionSubmit}
+                disabled={submittingContribution}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                {submittingContribution ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Save Progress"
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </DashboardShell>
   );
 }

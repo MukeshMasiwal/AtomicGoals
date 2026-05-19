@@ -477,11 +477,15 @@ export function canEmployeeMutateGoal(goal: EnterpriseGoalLike, user: { id: stri
   const assignedTo = toIdList(goal.assignedTo);
   const creatorId = toIdString(goal.creator);
 
-  if (goalTeamIds.length > 0) {
+  if (creatorId === user.id || assignedTo.includes(user.id)) {
+    return true;
+  }
+
+  if (goalTeamIds.length > 0 && userTeamId) {
     return goalTeamIds.includes(userTeamId);
   }
 
-  return creatorId === user.id || assignedTo.includes(user.id);
+  return false;
 }
 
 export function canManagerManageGoal(

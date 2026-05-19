@@ -217,7 +217,17 @@ export default function QuarterlyUpdatesClient({ user, initialGoals, windowInfo 
             ) : (
               goals.map((goal) => {
                 const isEditing = editingId === goal._id;
-                const canEdit = user.role === "admin" || (windowInfo.isOpen && String(goal.creator?._id || goal.creator) === user.id);
+                const isCreator = String(goal.creator?._id || goal.creator) === user.id;
+                const isAssigned = (goal.assignedTo || []).some((u: any) => String(u._id || u) === user.id);
+                const goalTeamId = String(goal.team?._id || goal.team || "");
+                const isTeamMember = goalTeamId && goalTeamId === (user.team?._id || user.team);
+                const isManagerAuthorized = user.role === "manager" && (
+                  String(goal.assignedManager?._id || goal.assignedManager) === user.id ||
+                  goal.department === user.department ||
+                  goalTeamId === (user.team?._id || user.team)
+                );
+                
+                const canEdit = user.role === "admin" || (windowInfo.isOpen && (isCreator || isAssigned || isTeamMember || isManagerAuthorized));
                 const isManager = user.role === "manager" || user.role === "admin";
                 
                 return (

@@ -10,9 +10,13 @@ export async function GET() {
 
     await connectDB();
     
-    let query: any = { role: { $in: ["manager", "admin"] } };
+    let query: any = {};
 
-    if (session.role === "employee") {
+    if (session.role === "admin") {
+      query = { role: { $in: ["manager", "admin"] } };
+    } else if (session.role === "manager") {
+      query = { _id: session.id };
+    } else if (session.role === "employee") {
       const employee = await User.findById(session.id).select("team").lean<{ team?: { toString(): string } }>();
       if (employee?.team) {
         const team = await Team.findById(employee.team).select("manager").lean<{ manager?: { toString(): string } }>();

@@ -157,13 +157,6 @@ export async function PUT(
       updates.team = null;
     }
 
-    // Allow creator or admin/manager to edit
-    if (String(goal.creator) !== session.id && session.role === "employee") {
-      // Check if assigned
-      if (!(goal.assignedTo || []).map(String).includes(session.id)) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
-    }
 
     // Employees cannot change approval status directly
     if (session.role === "employee") {
@@ -208,17 +201,24 @@ export async function PUT(
     
     // Calculate audit log changes before updating if the goal was locked/approved
     const changes: any[] = [];
-    if (goal.approvalStatus === "Approved" || goal.isLocked) {
-      const keysToTrack = ["title", "description", "dueDate", "goalWeightage", "numberOfTasks", "kpiType", "uom", "thrustArea", "plannedTargetValue", "progress", "status"];
-      for (const key of keysToTrack) {
-        if (updates[key] !== undefined && String(updates[key]) !== String(goal[key])) {
-          changes.push({
-            field: key,
-            oldValue: goal[key],
-            newValue: updates[key],
-          });
-        }
+    const keysToTrack = ["title", "description", "dueDate", "goalWeightage", "numberOfTasks", "kpiType", "uom", "thrustArea", "plannedTargetValue", "progress", "status", "tasksCompleted"];
+    for (const key of keysToTrack) {
+      if (updates[key] !== undefined && String(updates[key]) !== String(goal[key])) {
+        changes.push({
+          field: key,
+          oldValue: goal[key],
+          newValue: updates[key],
+        });
       }
+    }
+    
+    // Also explicitly track if a comment was added without any other changes
+    if (updates.comment && changes.length === 0) {
+       changes.push({
+         field: "comment",
+         oldValue: "",
+         newValue: updates.comment,
+       });
     }
 
     // Instead of using goal.save() which runs all schema validators (failing heavily on old seeded data missing `assignedManager` etc.),
@@ -248,6 +248,7 @@ export async function PUT(
           userName: session.name || "Unknown User",
           userRole: session.role || "Unknown Role",
           action,
+          comment: updates.comment || "",
           changes: [change],
         });
       }
@@ -269,12 +270,30 @@ export async function PUT(
 
     const { createNotification, notifyAdmins } = await import("@/lib/notifications");
 
-    if (notifyRecipients.size > 0) {
+    const isGoalCompleted = updates.status === "completed" && goal.status !== "completed";
+    const isProgressUpdated = updates.progress !== undefined && updates.progress !== goal.progress;
+    const hasComment = !!updates.comment;
+    
+    let notificationTitle = "Goal Updated";
+    let notificationMessage = `"${goal.title}" was updated by ${session.name}.`;
+    
+    if (isGoalCompleted) {
+      notificationTitle = "Goal Completed";
+      notificationMessage = `"${goal.title}" has been completed by ${session.name}!`;
+    } else if (isProgressUpdated) {
+      notificationTitle = "Team Progress Update";
+      notificationMessage = `Progress for "${goal.title}" is now ${updates.progress}% (Updated by ${session.name}).${hasComment ? ' A contribution note was added.' : ''}`;
+    } else if (hasComment) {
+      notificationTitle = "Contribution Update";
+      notificationMessage = `${session.name} added a contribution note to "${goal.title}".`;
+    }
+
+    if (notifyRecipients.size > 0 && (isGoalCompleted || isProgressUpdated || hasComment || changes.length > 0)) {
       for (const recipientId of notifyRecipients) {
         await createNotification({
-          type: "Goal Created", // Maybe just Goal Created icon is generic enough for Goal Updated
-          title: "Goal Updated",
-          message: `"${goal.title}" was updated by ${session.name}.`,
+          type: "Goal Created",
+          title: notificationTitle,
+          message: notificationMessage,
           recipient: recipientId,
           link: `/dashboard/goals?selected=${goalDocument._id}`,
           relatedGoal: goalDocument._id.toString(),
@@ -285,13 +304,15 @@ export async function PUT(
     const teamDoc = goal.team ? await Team.findById(goal.team).select("name").lean() : null;
     const teamName = teamDoc ? (teamDoc as any).name : "No Team";
 
-    await notifyAdmins({
-      type: "Goal Created",
-      title: "Goal Updated",
-      message: `${session.name} updated the goal: ${goal.title} (${teamName})`,
-      link: `/dashboard/goals?selected=${goalDocument._id}`,
-      relatedGoal: goalDocument._id.toString(),
-    });
+    if (isGoalCompleted) {
+      await notifyAdmins({
+        type: "Goal Created",
+        title: "Goal Completed",
+        message: `${session.name} completed the goal: ${goal.title} (${teamName})`,
+        link: `/dashboard/goals?selected=${goalDocument._id}`,
+        relatedGoal: goalDocument._id.toString(),
+      });
+    }
 
     return NextResponse.json({ success: true, goal: normalizeGoalForResponse({ ...goalDocument.toObject(), ...updates }) });
   } catch (error) {

@@ -16,6 +16,7 @@ const goalAuditLogSchema = new Schema(
         newValue: Schema.Types.Mixed,
       },
     ],
+    comment: { type: String, default: "" },
     timestamp: { type: Date, default: Date.now },
   },
   { collection: "goal_audit_logs" },

@@ -28,6 +28,17 @@ export async function PUT(
       return NextResponse.json({ error: "Quarterly check-in window is currently closed. Admin override required." }, { status: 403 });
     }
 
+    const { User } = await import("@/models/User");
+    const currentUser = await User.findById(session.id).select("team department").lean() as any;
+    
+    const { canEmployeeMutateGoal, canManagerManageGoal } = await import("@/lib/goal-enterprise");
+    if (session.role === "employee" && !canEmployeeMutateGoal(goal as any, { id: session.id, team: currentUser?.team })) {
+      return NextResponse.json({ error: "Forbidden: You do not have permission to update this goal." }, { status: 403 });
+    }
+    if (session.role === "manager" && !canManagerManageGoal(goal as any, { id: session.id, department: currentUser?.department, team: currentUser?.team })) {
+      return NextResponse.json({ error: "Forbidden: You do not have permission to manage this goal." }, { status: 403 });
+    }
+
     // Validation
     if (updates.plannedTargetValue !== undefined && updates.plannedTargetValue !== null && updates.plannedTargetValue < 0) {
       return NextResponse.json({ error: "Planned Target cannot be negative." }, { status: 400 });
@@ -137,6 +148,42 @@ export async function PUT(
           action,
           changes: [change],
         });
+      }
+    }
+
+    const { createNotification } = await import("@/lib/notifications");
+    
+    if (changes.length > 0) {
+      const isManagerReview = changes.some(c => c.field === "approvalComments");
+      const isStatusOrProgress = changes.some(c => ["quarterlyStatus", "actualAchievementValue", "progress", "tasksCompleted"].includes(c.field));
+      
+      const notifyRecipients = new Set<string>();
+      if (goal.creator?.toString() && goal.creator.toString() !== session.id) {
+        notifyRecipients.add(goal.creator.toString());
+      }
+      if (goal.assignedManager?.toString() && goal.assignedManager.toString() !== session.id) {
+        notifyRecipients.add(goal.assignedManager.toString());
+      }
+      if (goal.assignedTo?.length) {
+        goal.assignedTo.forEach((assignee: any) => {
+          const id = assignee.toString();
+          if (id !== session.id) notifyRecipients.add(id);
+        });
+      }
+
+      if (notifyRecipients.size > 0 && (isManagerReview || isStatusOrProgress)) {
+        for (const recipientId of notifyRecipients) {
+          await createNotification({
+            type: "Task Completed",
+            title: isManagerReview ? "Manager Review Added" : "Quarterly Progress Update",
+            message: isManagerReview 
+              ? `${session.name} added a review comment to "${goal.title}".` 
+              : `Quarterly progress for "${goal.title}" was updated by ${session.name}.`,
+            recipient: recipientId,
+            link: `/dashboard/quarterly-updates`,
+            relatedGoal: goal._id.toString(),
+          });
+        }
       }
     }
 

@@ -147,6 +147,12 @@ export default function AuditClient({ user }: { user: any }) {
                   <div className="text-sm text-slate-600 dark:text-slate-400 border-t border-border/50 pt-2 mt-1">
                     <span className="font-semibold text-slate-900 dark:text-slate-100">{log.userName || "Unknown User"}</span> performed action <strong>{log.action}</strong> on Task: <span className="font-semibold text-slate-900 dark:text-slate-100">{log.taskName || log.goalTitle || "Unknown Task"}</span> in Goal: <span className="font-semibold text-slate-900 dark:text-slate-100">{log.goalTitle || "Unknown Goal"}</span>
                   </div>
+                  {log.comment && (
+                    <div className="mt-2 p-3 bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-md text-sm italic text-slate-700 dark:text-slate-300">
+                      <span className="font-semibold text-indigo-700 dark:text-indigo-400 not-italic block mb-1">Contribution Note:</span>
+                      "{log.comment}"
+                    </div>
+                  )}
                 </div>
                 <div className="p-4 bg-card/50">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
